@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Get nonce and message
-    const response = await fetch('/api/matches/prepare', {
+    const response = await fetch('/api/prepare', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 

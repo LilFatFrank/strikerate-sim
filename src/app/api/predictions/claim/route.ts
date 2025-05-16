@@ -16,6 +16,7 @@ import {
   createTransferCheckedInstruction
 } from '@solana/spl-token';
 import { USDC_MINT } from '@/lib/constants';
+import { updateStats } from '@/lib/stats';
 
 export async function POST(req: Request) {
   try {
@@ -178,6 +179,15 @@ export async function POST(req: Request) {
       hasClaimed: true,
       updatedAt: Timestamp.now()
     });
+
+    // Update stats
+    await updateStats((current) => ({
+      winnings: {
+        total: current.winnings.total + prediction.amountWon,
+        totalClaims: current.winnings.totalClaims + 1,
+        pendingClaims: current.winnings.pendingClaims - prediction.amountWon
+      }
+    }));
 
     // Increment nonce
     await nonceRef.update({

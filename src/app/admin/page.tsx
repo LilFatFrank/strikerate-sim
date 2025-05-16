@@ -2,69 +2,64 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, onSnapshot, } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
+import Link from 'next/link';
 
 interface DashboardStats {
-  totalMatches: number;
-  upcomingMatches: number;
-  liveMatches: number;
-  completedMatches: number;
-  totalPredictions: number;
-  totalUsers: number;
-  totalWinnings: number;
+  matches: {
+    total: number;
+    upcoming: number;
+    live: number;
+    completed: number;
+  };
+  predictions: {
+    total: number;
+    totalAmount: number;
+  };
+  users: {
+    total: number;
+    active: number;
+  };
+  winnings: {
+    total: number;
+    totalClaims: number;
+    pendingClaims: number;
+  };
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
-    totalMatches: 0,
-    upcomingMatches: 0,
-    liveMatches: 0,
-    completedMatches: 0,
-    totalPredictions: 0,
-    totalUsers: 0,
-    totalWinnings: 0
+    matches: {
+      total: 0,
+      upcoming: 0,
+      live: 0,
+      completed: 0
+    },
+    predictions: {
+      total: 0,
+      totalAmount: 0
+    },
+    users: {
+      total: 0,
+      active: 0
+    },
+    winnings: {
+      total: 0,
+      totalClaims: 0,
+      pendingClaims: 0
+    }
   });
 
   useEffect(() => {
-    // Listen to matches
-    const matchesQuery = query(collection(db, 'matches'));
-    const matchesUnsubscribe = onSnapshot(matchesQuery, (snapshot) => {
-      const matches = snapshot.docs.map(doc => doc.data());
-      setStats(prev => ({
-        ...prev,
-        totalMatches: matches.length,
-        upcomingMatches: matches.filter(m => m.status === 'upcoming').length,
-        liveMatches: matches.filter(m => m.status === 'live').length,
-        completedMatches: matches.filter(m => m.status === 'completed').length
-      }));
+    // Listen to stats document
+    const statsRef = doc(db, 'stats', 'global');
+    const unsubscribe = onSnapshot(statsRef, (doc) => {
+      if (doc.exists()) {
+        setStats(doc.data() as DashboardStats);
+      }
     });
 
-    // Get total predictions
-    const predictionsQuery = query(collection(db, 'predictions'));
-    const predictionsUnsubscribe = onSnapshot(predictionsQuery, (snapshot) => {
-      setStats(prev => ({
-        ...prev,
-        totalPredictions: snapshot.size
-      }));
-    });
-
-    // Get total users and winnings
-    const usersQuery = query(collection(db, 'users'));
-    const usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
-      const users = snapshot.docs.map(doc => doc.data());
-      const totalWinnings = users.reduce((sum, user) => sum + (user.totalAmountWon || 0), 0);
-      setStats(prev => ({
-        ...prev,
-        totalUsers: users.length,
-        totalWinnings
-      }));
-    });
-
-    return () => {
-      matchesUnsubscribe();
-      predictionsUnsubscribe();
-      usersUnsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -75,29 +70,36 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900">Matches</h3>
           <div className="mt-2 space-y-2">
-            <p className="text-sm text-gray-500">Total: {stats.totalMatches}</p>
-            <p className="text-sm text-gray-500">Upcoming: {stats.upcomingMatches}</p>
-            <p className="text-sm text-gray-500">Live: {stats.liveMatches}</p>
-            <p className="text-sm text-gray-500">Completed: {stats.completedMatches}</p>
+            <p className="text-sm text-gray-500">Total: {stats.matches.total}</p>
+            <p className="text-sm text-gray-500">Upcoming: {stats.matches.upcoming}</p>
+            <p className="text-sm text-gray-500">Live: {stats.matches.live}</p>
+            <p className="text-sm text-gray-500">Completed: {stats.matches.completed}</p>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900">Predictions</h3>
-          <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.totalPredictions}</p>
-          <p className="text-sm text-gray-500">Total predictions made</p>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-gray-500">Total: {stats.predictions.total}</p>
+            <p className="text-sm text-gray-500">Amount: {stats.predictions.totalAmount} SOL</p>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900">Users</h3>
-          <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.totalUsers}</p>
-          <p className="text-sm text-gray-500">Total registered users</p>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-gray-500">Total: {stats.users.total}</p>
+            <p className="text-sm text-gray-500">Active: {stats.users.active}</p>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Total Winnings</h3>
-          <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.totalWinnings} SOL</p>
-          <p className="text-sm text-gray-500">Total amount won by users</p>
+          <h3 className="text-lg font-medium text-gray-900">Winnings</h3>
+          <div className="mt-2 space-y-2">
+            <p className="text-sm text-gray-500">Total: {stats.winnings.total} USDC</p>
+            <p className="text-sm text-gray-500">Claims: {stats.winnings.totalClaims}</p>
+            <p className="text-sm text-gray-500">Pending: {stats.winnings.pendingClaims} USDC</p>
+          </div>
         </div>
       </div>
 
@@ -105,24 +107,24 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900">Quick Links</h3>
           <div className="mt-4 space-y-2">
-            <a
-              href="/admin/matches"
+            <Link
+              href="/matches"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
             >
-              Manage Matches
-            </a>
-            <a
-              href="/admin/predictions"
+              Matches
+            </Link>
+            <Link
+              href="/predictions"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
             >
-              View Predictions
-            </a>
-            <a
-              href="/admin/users"
+              Predictions
+            </Link>
+            <Link
+              href="/users"
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
             >
-              Manage Users
-            </a>
+              Users
+            </Link>
           </div>
         </div>
 

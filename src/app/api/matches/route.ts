@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { PublicKey } from '@solana/web3.js';
 import * as nacl from 'tweetnacl';
 import bs58 from 'bs58';
+import { updateStats } from '@/lib/stats';
 
 interface CreateMatchRequest {
   team1: string;
@@ -94,6 +95,14 @@ export async function POST(req: Request) {
       createdAt: now,
       updatedAt: now
     };
+
+    // Update stats
+    await updateStats((current) => ({
+      matches: {
+        total: current.matches.total + 1,
+        upcoming: current.matches.upcoming + 1
+      }
+    }));
 
     await matchRef.set(matchData);
 

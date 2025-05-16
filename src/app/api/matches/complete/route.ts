@@ -5,6 +5,7 @@ import { PublicKey } from '@solana/web3.js';
 import * as nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { calculateMatchScore } from '@/lib/scoring';
+import { updateStats } from '@/lib/stats';
 
 interface Prediction {
   team1Score: number;
@@ -209,6 +210,17 @@ export async function POST(req: Request) {
       lastUpdated: Timestamp.now(),
       lastActivity: 'COMPLETE_MATCH'
     });
+
+    // Update stats
+    await updateStats((current) => ({
+      matches: {
+        live: current.matches.live - 1,
+        completed: current.matches.completed + 1
+      },
+      winnings: {
+        pendingClaims: current.winnings.pendingClaims + prizePool
+      }
+    }));
 
     // Commit all updates
     await batch.commit();
