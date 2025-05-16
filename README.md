@@ -14,6 +14,8 @@ strikerate is a cricket prediction platform that allows users to:
 
 ## How It Works
 
+[See a detailed walkthrough here.](https://strikerate-sim.vercel.app/)
+
 ### Match Lifecycle
 1. **Upcoming**: Matches are created and open for predictions
    - Users can place predictions with USDC
