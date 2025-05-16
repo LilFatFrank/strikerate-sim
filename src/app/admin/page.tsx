@@ -51,7 +51,6 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    // Listen to stats document
     const statsRef = doc(db, 'stats', 'global');
     const unsubscribe = onSnapshot(statsRef, (doc) => {
       if (doc.exists()) {
@@ -64,74 +63,126 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold text-[#0d0019]">Admin Dashboard</h1>
+        <div className="text-sm text-[#0d0019]/70">
+          Last updated: {new Date().toLocaleTimeString()}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Matches</h3>
-          <div className="mt-2 space-y-2">
-            <p className="text-sm text-gray-500">Total: {stats.matches.total}</p>
-            <p className="text-sm text-gray-500">Upcoming: {stats.matches.upcoming}</p>
-            <p className="text-sm text-gray-500">Live: {stats.matches.live}</p>
-            <p className="text-sm text-gray-500">Completed: {stats.matches.completed}</p>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-[#0d0019] mb-4">Matches</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Total</span>
+              <span className="text-[#0d0019] font-medium">{stats.matches.total}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Upcoming</span>
+              <span className="text-[#ffd400] font-medium">{stats.matches.upcoming}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Live</span>
+              <span className="text-[#ff503b] font-medium">{stats.matches.live}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Completed</span>
+              <span className="text-[#3fe0aa] font-medium">{stats.matches.completed}</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Predictions</h3>
-          <div className="mt-2 space-y-2">
-            <p className="text-sm text-gray-500">Total: {stats.predictions.total}</p>
-            <p className="text-sm text-gray-500">Amount: {stats.predictions.totalAmount} SOL</p>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-[#0d0019] mb-4">Predictions</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Total</span>
+              <span className="text-[#0d0019] font-medium">{stats.predictions.total}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Amount</span>
+              <span className="text-[#0d0019] font-medium flex items-center gap-1">
+                {stats.predictions.totalAmount}{" "}
+                <img
+                  src={"/assets/usdc-coin.svg"}
+                  alt="usdc"
+                  className="w-4 h-4"
+                />
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Users</h3>
-          <div className="mt-2 space-y-2">
-            <p className="text-sm text-gray-500">Total: {stats.users.total}</p>
-            <p className="text-sm text-gray-500">Active: {stats.users.active}</p>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-[#0d0019] mb-4">Users</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Total</span>
+              <span className="text-[#0d0019] font-medium">{stats.users.total}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Active</span>
+              <span className="text-[#0d0019] font-medium">{stats.users.active}</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Winnings</h3>
-          <div className="mt-2 space-y-2">
-            <p className="text-sm text-gray-500">Total: {stats.winnings.total} USDC</p>
-            <p className="text-sm text-gray-500">Claims: {stats.winnings.totalClaims}</p>
-            <p className="text-sm text-gray-500">Pending: {stats.winnings.pendingClaims} USDC</p>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-[#0d0019] mb-4">Winnings</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Total</span>
+              <span className="text-[#0d0019] font-medium flex items-center gap-1">
+                {stats.winnings.total}{" "}
+                <img
+                  src={"/assets/usdc-coin.svg"}
+                  alt="usdc"
+                  className="w-4 h-4"
+                />
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Claims</span>
+              <span className="text-[#0d0019] font-medium">{stats.winnings.totalClaims}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[#0d0019]/70">Pending</span>
+              <span className="text-[#0d0019] font-medium flex items-center gap-1">
+                {stats.winnings.pendingClaims}{" "}
+                <img
+                  src={"/assets/usdc-coin.svg"}
+                  alt="usdc"
+                  className="w-4 h-4"
+                />
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Quick Links</h3>
-          <div className="mt-4 space-y-2">
+      <div className="grid grid-cols-1">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-[#0d0019] mb-4">Quick Links</h3>
+          <div className="space-y-2">
             <Link
               href="/matches"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+              className="flex items-center justify-between px-4 py-1 text-[#0d0019] hover:bg-[#4f4395]/5 rounded-lg transition-colors"
             >
-              Matches
+              <span>Matches</span>
+              <svg className="w-4 h-4 text-[#0d0019]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
             <Link
-              href="/predictions"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+              href="/leaderboard"
+              className="flex items-center justify-between px-4 py-1 text-[#0d0019] hover:bg-[#4f4395]/5 rounded-lg transition-colors"
             >
-              Predictions
+              <span>Users</span>
+              <svg className="w-4 h-4 text-[#0d0019]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
-            <Link
-              href="/users"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
-            >
-              Users
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-gray-500">Coming soon...</p>
           </div>
         </div>
       </div>

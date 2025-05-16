@@ -34,6 +34,20 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if user has already made a prediction
+    const existingPrediction = await adminDb
+      .collection('predictions')
+      .where('matchId', '==', matchId)
+      .where('userId', '==', walletAddress)
+      .get();
+
+    if (!existingPrediction.empty) {
+      return NextResponse.json(
+        { error: 'You have already made a prediction for this match' },
+        { status: 400 }
+      );
+    }
+
     // Verify signature
     const nonceRef = adminDb.collection('nonces').doc(walletAddress);
     const nonceDoc = await nonceRef.get();

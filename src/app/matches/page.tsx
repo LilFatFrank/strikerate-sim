@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { LockMatchButton } from '@/components/admin/LockMatchButton';
 import { CompleteMatchForm } from '@/components/admin/CompleteMatchForm';
+import { toast } from 'sonner';
 
 type MatchStatus = 'UPCOMING' | 'LOCKED' | 'COMPLETED';
 
@@ -27,13 +28,25 @@ interface Match {
   updatedAt: Timestamp;
 }
 
+const getStatusBadge = (status: MatchStatus) => {
+  switch (status) {
+    case "UPCOMING":
+      return "text-[#ffd400]";
+    case "LOCKED":
+      return "text-[#ff503b]";
+    case "COMPLETED":
+      return "text-[#3fe0aa]";
+    default:
+      return "text-[#f1f2f2]";
+  }
+};
+
 export default function MatchesPage() {
   const router = useRouter();
   const { user, getSignature } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [formData, setFormData] = useState({
     team1: '',
@@ -68,7 +81,6 @@ export default function MatchesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
     
     try {
@@ -76,20 +88,19 @@ export default function MatchesPage() {
         throw new Error('Wallet not connected');
       }
 
-      // Get signature
       const { signature, message, nonce } = await getSignature('CREATE_MATCH', {
-        team1: formData.team1,
-        team2: formData.team2
+        team1: formData.team1.trim(),
+        team2: formData.team2.trim()
       });
 
-      // Create match
       const response = await fetch('/api/matches', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          team1: formData.team1.trim(),
+          team2: formData.team2.trim(),
           walletAddress: user.walletAddress,
           signature,
           message,
@@ -102,7 +113,16 @@ export default function MatchesPage() {
         throw new Error(error.error || 'Failed to create match');
       }
 
-      // Reset form
+      // Show success message
+      toast.success('Match created successfully', {
+        style: {
+          background: '#4f4395',
+          color: 'white',
+          border: 'none'
+        }
+      });
+
+      // Reset form and close modal
       setFormData({
         team1: '',
         team2: ''
@@ -110,56 +130,58 @@ export default function MatchesPage() {
       setIsCreating(false);
     } catch (error) {
       console.error('Error creating match:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create match');
+      toast.error(error instanceof Error ? error.message : 'Failed to create match', {
+        style: {
+          background: '#ff503b',
+          color: 'white',
+          border: 'none'
+        }
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Matches</h1>
+    <div className="min-h-screen py-8">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-3">
+          <h1 className="text-4xl font-bold text-[#0d0019]">Matches</h1>
           {isAdmin && (
             <button
               onClick={() => setIsCreating(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="bg-[#4f4395] text-white font-semibold cursor-pointer px-4 py-2 rounded-lg hover:bg-[#433a7d] transition-colors"
             >
               Create Match
             </button>
           )}
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
-
-        {isCreating && (
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">Create Match</h2>
+        {isCreating ? (
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <h2 className="text-2xl font-semibold text-[#0d0019] mb-4">Create Match</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Team 1</label>
+                  <label className="block text-sm font-medium text-[#0d0019]/70">Team 1</label>
                   <input
                     type="text"
+                    placeholder='India'
                     value={formData.team1}
                     onChange={(e) => setFormData({ ...formData, team1: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg shadow-sm  outline-none border-none py-1 px-4"
                     required
                     disabled={isLoading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Team 2</label>
+                  <label className="block text-sm font-medium text-[#0d0019]/70">Team 2</label>
                   <input
                     type="text"
+                    placeholder='England'
                     value={formData.team2}
                     onChange={(e) => setFormData({ ...formData, team2: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-lg shadow-sm  outline-none border-none py-1 px-4"
                     required
                     disabled={isLoading}
                   />
@@ -175,16 +197,15 @@ export default function MatchesPage() {
                       team1: '',
                       team2: ''
                     });
-                    setError(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-200 font-semibold rounded-lg text-[#0d0019]/70 hover:bg-gray-50 transition-colors"
                   disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                  className="px-4 py-2 bg-[#4f4395] text-white font-bold rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Creating...' : 'Create'}
@@ -192,83 +213,97 @@ export default function MatchesPage() {
               </div>
             </form>
           </div>
-        )}
+        ) : null}
 
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table className="w-full table-fixed">
+            <thead>
+              <tr className="bg-[#4f4395]">
+                <th className="px-4 py-1 text-left text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '30%' : '35%' }}>
                   Match
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Score
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-1 text-left text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '10%' : '15%' }}>
                   Pool
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
                   Predictions
                 </th>
+                <th className="w-[20%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                  Score
+                </th>
                 {isAdmin && (
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
                     Actions
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-[#4f4395]/5">
               {matches.map((match) => (
-                <tr key={match.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => router.push(`/matches/${match.id}`)}
-                      className="text-left text-sm font-medium text-gray-900 hover:text-blue-600"
-                    >
+                <tr 
+                  key={match.id}
+                  className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/matches/${match.id}`)}
+                >
+                  <td className="px-4 py-1">
+                    <span className="text-[#0d0019] text-[14px] font-medium group-hover:text-[#4f4395] transition-colors">
                       {match.team1} vs {match.team2}
-                    </button>
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      match.status === 'UPCOMING' ? 'bg-yellow-100 text-yellow-800' :
-                      match.status === 'LOCKED' ? 'bg-red-100 text-red-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
+                  <td className="px-4 py-1">
+                    <span className={`text-xs font-medium ${getStatusBadge(match.status)}`}>
                       {match.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {match.status === 'COMPLETED' && match.finalScore ? (
-                      `${match.finalScore.team1Score}/${match.finalScore.team1Wickets} - ${match.finalScore.team2Score}/${match.finalScore.team2Wickets}`
+                  <td className="px-4 py-1">
+                    <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
+                      {match.totalPool}{" "}
+                      <img
+                        src={"/assets/usdc-coin.svg"}
+                        alt="usdc"
+                        className="w-4 h-4"
+                      />
+                    </span>
+                  </td>
+                  <td className="px-4 py-1">
+                    <span className="text-[#0d0019] text-[14px]">
+                      {match.totalPredictions}
+                    </span>
+                  </td>
+                  <td className="px-4 py-1">
+                    {match.finalScore ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[12px] text-[#0d0019]">
+                          {match.team1}: {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
+                        </span>
+                        <span className="text-[12px] text-[#0d0019]">
+                          {match.team2}: {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
+                        </span>
+                      </div>
                     ) : (
-                      '-'
+                      <span className="text-[#0d0019]/50">-</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {match.totalPool} USDC
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {match.totalPredictions}
-                  </td>
                   {isAdmin && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-1">
                       {match.status === 'UPCOMING' && (
                         <LockMatchButton 
                           matchId={match.id}
-                          onSuccess={() => {
-                            // Optionally refresh the page or update UI
-                          }}
+                          onSuccess={() => {}}
                         />
                       )}
                       {match.status === 'LOCKED' && (
                         <button
-                          onClick={() => setSelectedMatch(match)}
-                          className="text-green-600 hover:text-green-900"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedMatch(match);
+                          }}
+                          className="cursor-pointer font-medium bg-[#3fe0aa]/80 text-white px-2 py-[2px] rounded hover:bg-[#3fe0aa] transition-colors disabled:bg-[#3fe0aa]/50 disabled:cursor-not-allowed"
                         >
-                          Complete Match
+                          Complete
                         </button>
                       )}
                     </td>
@@ -280,23 +315,19 @@ export default function MatchesPage() {
         </div>
 
         {matches.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No matches found.</p>
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p className="text-[#0d0019]/70">No matches available.</p>
           </div>
         )}
       </div>
 
-      {/* Complete Match Modal */}
       {selectedMatch && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                Complete Match: {selectedMatch.team1} vs {selectedMatch.team2}
-              </h3>
+        <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+            <div className="flex justify-end items-center mb-2">
               <button
                 onClick={() => setSelectedMatch(null)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-[#0d0019]/50 hover:text-[#0d0019] transition-colors"
               >
                 <span className="sr-only">Close</span>
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

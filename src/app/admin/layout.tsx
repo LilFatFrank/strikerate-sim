@@ -19,10 +19,10 @@ export default function AdminLayout({
 
   if (isAuthLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4f4395] mx-auto"></div>
+          <p className="mt-4 text-[#0d0019]/70">Loading admin panel...</p>
         </div>
       </div>
     );
@@ -30,10 +30,10 @@ export default function AdminLayout({
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Connect Your Wallet</h2>
-          <p className="text-gray-600">You need to connect your wallet to access the admin area.</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-md w-full mx-4">
+          <h2 className="text-2xl font-bold text-[#0d0019] mb-4">Connect Wallet</h2>
+          <p className="text-[#0d0019]/70">Please connect your wallet to access the admin area.</p>
         </div>
       </div>
     );
@@ -41,14 +41,20 @@ export default function AdminLayout({
 
   if (user.walletAddress !== process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Admin Access Required</h2>
-          <p className="text-gray-600">This area is restricted to admin users only.</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-md w-full mx-4">
+          <h2 className="text-2xl font-bold text-[#0d0019] mb-4">Access Denied</h2>
+          <p className="text-[#0d0019]/70">This area is restricted to admin users only.</p>
         </div>
       </div>
     );
   }
 
-  return (children);
+  return (
+    <div className="min-h-screen py-8">
+      <div className="container mx-auto px-4">
+        {children}
+      </div>
+    </div>
+  );
 }

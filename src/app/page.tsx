@@ -1,12 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  Timestamp,
+} from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
-type MatchStatus = 'UPCOMING' | 'LOCKED' | 'COMPLETED';
+type MatchStatus = "UPCOMING" | "LOCKED" | "COMPLETED";
 
 interface Match {
   id: string;
@@ -27,33 +32,29 @@ interface Match {
 
 const getStatusBadge = (status: MatchStatus) => {
   switch (status) {
-    case 'UPCOMING':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'LOCKED':
-      return 'bg-red-100 text-red-800';
-    case 'COMPLETED':
-      return 'bg-green-100 text-green-800';
+    case "UPCOMING":
+      return "text-[#ffd400]";
+    case "LOCKED":
+      return "text-[#ff503b]";
+    case "COMPLETED":
+      return "text-[#3fe0aa]";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "text-[#f1f2f2]";
   }
 };
 
 export default function Home() {
-  const { user } = useAuth();
+  const { push } = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Query all matches
-    const q = query(
-      collection(db, 'matches'),
-      orderBy('createdAt', 'desc')
-    );
+    const q = query(collection(db, "matches"), orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const matchesData = snapshot.docs.map(doc => ({
+      const matchesData = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Match[];
       setMatches(matchesData);
       setIsLoading(false);
@@ -62,125 +63,134 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  // Group matches by status
-  const upcomingMatches = matches.filter(m => m.status === 'UPCOMING');
-  const liveMatches = matches.filter(m => m.status === 'LOCKED');
-  const completedMatches = matches.filter(m => m.status === 'COMPLETED');
+  const upcomingMatches = matches.filter((m) => m.status === "UPCOMING");
+  const liveMatches = matches.filter((m) => m.status === "LOCKED");
+  const completedMatches = matches.filter((m) => m.status === "COMPLETED");
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading matches...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4f4395] mx-auto"></div>
+          <p className="mt-4 text-[#0d0019]/70">Loading matches...</p>
         </div>
       </div>
     );
   }
 
-  const MatchCard = ({ match }: { match: Match }) => (
-    <Link 
-      key={match.id} 
-      href={`/matches/${match.id}`}
-      className="block bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow"
-    >
-      <div className="p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              {match.team1} vs {match.team2}
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Pool: {match.totalPool} USDC
-            </p>
-            <p className="text-sm text-gray-500">
-              Predictions: {match.totalPredictions}
-            </p>
-          </div>
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(match.status)}`}>
-            {match.status}
-          </span>
-        </div>
-
-        {match.status === 'LOCKED' && match.finalScore && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-gray-600">
-              {match.team1}: {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
-            </p>
-            <p className="text-sm text-gray-600">
-              {match.team2}: {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
-            </p>
-          </div>
-        )}
-
-        {match.status === 'COMPLETED' && match.finalScore && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm font-medium text-gray-900">Final Score</p>
-            <p className="text-sm text-gray-600">
-              {match.team1}: {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
-            </p>
-            <p className="text-sm text-gray-600">
-              {match.team2}: {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
-            </p>
-          </div>
-        )}
-
-        {match.status === 'UPCOMING' && user && (
-          <div className="mt-4">
-            <span className="text-sm text-blue-600">Click to make prediction</span>
-          </div>
-        )}
+  const MatchTable = ({
+    matches,
+    title,
+  }: {
+    matches: Match[];
+    title: string;
+  }) => (
+    <div className="mb-8">
+      <h2 className="text-2xl font-semibold text-[#0d0019] mb-3">{title}</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <table className="w-full table-fixed">
+          <thead>
+            <tr className="bg-[#4f4395]">
+              <th className="w-[35%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                Match
+              </th>
+              <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                Status
+              </th>
+              <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                Pool
+              </th>
+              <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                Predictions
+              </th>
+              <th className="w-[30%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
+                Score
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#4f4395]/5">
+            {matches.map((match) => (
+              <tr
+                key={match.id}
+                className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
+                onClick={() => push(`/matches/${match.id}`)}
+              >
+                <td className="px-4 py-1">
+                  <div className="flex flex-col">
+                    <span className="text-[#0d0019] text-[14px] font-medium group-hover:text-[#4f4395] transition-colors">
+                      {match.team1} vs {match.team2}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-1">
+                  <span
+                    className={`text-xs font-medium rounded-full ${getStatusBadge(
+                      match.status
+                    )}`}
+                  >
+                    {match.status}
+                  </span>
+                </td>
+                <td className="px-4 py-1">
+                  <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
+                    {match.totalPool}{" "}
+                    <img
+                      src={"/assets/usdc-coin.svg"}
+                      alt="usdc"
+                      className="w-4 h-4"
+                    />
+                  </span>
+                </td>
+                <td className="px-4 py-1">
+                  <span className="text-[#0d0019] text-[14px]">
+                    {match.totalPredictions}
+                  </span>
+                </td>
+                <td className="px-4 py-1">
+                  {match.finalScore ? (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[12px] text-[#0d0019]">
+                        {match.team1}: {match.finalScore.team1Score}/
+                        {match.finalScore.team1Wickets}
+                      </span>
+                      <span className="text-[12px] text-[#0d0019]">
+                        {match.team2}: {match.finalScore.team2Score}/
+                        {match.finalScore.team2Wickets}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[#0d0019]/50">-</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </Link>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Matches</h1>
-        
-        {/* Upcoming Matches */}
-        {upcomingMatches.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Upcoming Matches</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {upcomingMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-            </div>
-          </div>
-        )}
+    <div className="min-h-screen py-8">
+      <h1 className="text-4xl font-bold text-[#0d0019] mb-8">Matches</h1>
 
-        {/* Live Matches */}
-        {liveMatches.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Live Matches</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {liveMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-            </div>
-          </div>
-        )}
+      {upcomingMatches.length > 0 && (
+        <MatchTable matches={upcomingMatches} title="Upcoming" />
+      )}
 
-        {/* Completed Matches */}
-        {completedMatches.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Completed Matches</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {completedMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-            </div>
-          </div>
-        )}
+      {liveMatches.length > 0 && (
+        <MatchTable matches={liveMatches} title="Live" />
+      )}
 
-        {matches.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No matches available.</p>
-          </div>
-        )}
-      </div>
+      {completedMatches.length > 0 && (
+        <MatchTable matches={completedMatches} title="Completed" />
+      )}
+
+      {matches.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+          <p className="text-[#0d0019]/70">No matches available.</p>
+        </div>
+      )}
     </div>
   );
 }
