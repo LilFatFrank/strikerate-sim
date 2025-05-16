@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: "strikerate",
-  description: "win with Precision",
+  description: "win with precision",
   icons: {
     icon: [
       {
@@ -47,7 +47,25 @@ export const metadata: Metadata = {
         url: "/assets/strikerate-logo.svg",
       },
     ],
-  }
+  },
+  openGraph: {
+    title: "strikerate",
+    description: "win with precision",
+    url: "https://strikerate-sim.vercel.app/",
+    siteName: "strikerate",
+    images: [
+      {
+        url: "https://strikerate-sim.vercel.app/assets/strikerate-logo.png",
+        alt: "strikerate - win with precision",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  metadataBase: new URL("https://strikerate-sim.vercel.app"),
+  alternates: {
+    canonical: "https://strikerate-sim.vercel.app",
+  },
 };
 
 export default function RootLayout({
