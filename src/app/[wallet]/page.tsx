@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getStatusBadge } from "@/lib/status";
 
 interface Prediction {
   id: string;
@@ -283,13 +284,7 @@ export default function UserProfilePage({
                         <div className="text-[12px] text-[#0d0019]">
                           {match.team1} vs {match.team2}
                           <span
-                            className={`ml-2 text-xs font-medium rounded-full ${
-                              match.status === "UPCOMING"
-                                ? "text-[#ffd400]"
-                                : match.status === "LOCKED"
-                                ? "text-[#ff503b]"
-                                : "text-[#3fe0aa]"
-                            }`}
+                            className={`ml-2 text-xs font-medium rounded-full ${getStatusBadge(match.status)}`}
                           >
                             {match.status}
                           </span>
@@ -359,7 +354,7 @@ export default function UserProfilePage({
                         {prediction.isWinner
                           ? "won"
                           : prediction.amountWon === undefined
-                          ? "pending"
+                          ? "-"
                           : "lost"}
                       </span>
                     </td>

@@ -10,6 +10,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { getStatusBadge } from "@/lib/status";
 
 type MatchStatus = "UPCOMING" | "LOCKED" | "COMPLETED";
 
@@ -29,19 +30,6 @@ interface Match {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
-
-const getStatusBadge = (status: MatchStatus) => {
-  switch (status) {
-    case "UPCOMING":
-      return "text-[#ffd400]";
-    case "LOCKED":
-      return "text-[#ff503b]";
-    case "COMPLETED":
-      return "text-[#3fe0aa]";
-    default:
-      return "text-[#f1f2f2]";
-  }
-};
 
 export default function Home() {
   const { push } = useRouter();

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { LockMatchButton } from '@/components/admin/LockMatchButton';
 import { CompleteMatchForm } from '@/components/admin/CompleteMatchForm';
 import { toast } from 'sonner';
+import { getStatusBadge } from '@/lib/status';
 
 type MatchStatus = 'UPCOMING' | 'LOCKED' | 'COMPLETED';
 
@@ -27,19 +28,6 @@ interface Match {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
-
-const getStatusBadge = (status: MatchStatus) => {
-  switch (status) {
-    case "UPCOMING":
-      return "text-[#ffd400]";
-    case "LOCKED":
-      return "text-[#ff503b]";
-    case "COMPLETED":
-      return "text-[#3fe0aa]";
-    default:
-      return "text-[#f1f2f2]";
-  }
-};
 
 export default function MatchesPage() {
   const router = useRouter();
