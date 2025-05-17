@@ -99,10 +99,29 @@ export default function UserProfilePage({
         const matchRef = doc(db, "matches", matchId);
         const unsubscribeMatch = onSnapshot(matchRef, (doc) => {
           if (doc.exists()) {
-            setMatches((prev) => ({
-              ...prev,
-              [matchId]: { id: matchId, ...doc.data() } as Match,
-            }));
+            setMatches((prev) => {
+              const newMatches = {
+                ...prev,
+                [matchId]: { id: matchId, ...doc.data() } as Match,
+              };
+              
+              // Sort predictions after we have the match data
+              const sortedPredictions = predictionsData.sort((a, b) => {
+                const matchA = newMatches[a.matchId];
+                const matchB = newMatches[b.matchId];
+                if (!matchA || !matchB) return 0;
+                
+                const statusOrder = {
+                  'UPCOMING': 0,
+                  'LOCKED': 1,
+                  'COMPLETED': 2
+                };
+                return statusOrder[matchA.status] - statusOrder[matchB.status];
+              });
+              
+              setPredictions(sortedPredictions);
+              return newMatches;
+            });
           }
         });
         return unsubscribeMatch;
@@ -283,13 +302,37 @@ export default function UserProfilePage({
                     </td>
                     <td className="px-4 py-1">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[12px] text-[#0d0019]">
-                          {match?.team1}: {prediction.team1Score}/
-                          {prediction.team1Wickets}
+                        <span
+                          className={`text-[12px] ${
+                            match?.status === "UPCOMING"
+                              ? "text-[#0d0019]/50"
+                              : "text-[#0d0019]"
+                          }`}
+                        >
+                          {match?.status === "UPCOMING" ? (
+                            <>Hidden</>
+                          ) : (
+                            <>
+                              {match?.team1}: {prediction.team1Score}/
+                              {prediction.team1Wickets}
+                            </>
+                          )}
                         </span>
-                        <span className="text-[12px] text-[#0d0019]">
-                          {match?.team2}: {prediction.team2Score}/
-                          {prediction.team2Wickets}
+                        <span
+                          className={`text-[12px] ${
+                            match?.status === "UPCOMING"
+                              ? "text-[#0d0019]/50"
+                              : "text-[#0d0019]"
+                          }`}
+                        >
+                          {match?.status === "UPCOMING" ? (
+                            <>Hidden</>
+                          ) : (
+                            <>
+                              {match?.team2}: {prediction.team2Score}/
+                              {prediction.team2Wickets}
+                            </>
+                          )}
                         </span>
                       </div>
                     </td>
