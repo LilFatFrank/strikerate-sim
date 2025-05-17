@@ -6,11 +6,97 @@ import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 
+const HowItWorksModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-[#0d0019]">How It Works</h2>
+          <button
+            onClick={onClose}
+            className="cursor-pointer text-[#0d0019]/50 hover:text-[#0d0019] transition-colors"
+          >
+            <span className="sr-only">Close</span>
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              1
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Connect Your Wallet</h3>
+              <p className="text-[#0d0019]/70 text-sm">Click the Connect button and sign in with your Solana wallet</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              2
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Choose a Match</h3>
+              <p className="text-[#0d0019]/70 text-sm">Browse upcoming matches and select one to make your prediction</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              3
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Make Your Prediction</h3>
+              <p className="text-[#0d0019]/70 text-sm">Predict the final score for both teams (runs and wickets)</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              4
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Place Your Bet</h3>
+              <p className="text-[#0d0019]/70 text-sm">Stake 2 USDC on your prediction</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              5
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Wait for Results</h3>
+              <p className="text-[#0d0019]/70 text-sm">Once the match ends, winners are determined based on prediction accuracy</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4f4395] text-white flex items-center justify-center font-bold">
+              6
+            </div>
+            <div>
+              <h3 className="font-medium text-[#0d0019] mb-1">Claim Your Winnings</h3>
+              <p className="text-[#0d0019]/70 text-sm">If you win, claim your USDC prize directly to your wallet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export function Header() {
   const { publicKey } = useWallet();
   const { disconnect, user } = useAuth();
   const isAdmin = user?.walletAddress === process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +147,12 @@ export function Header() {
           >
             Leaderboard
           </Link>
+          <button
+            onClick={() => setIsHowItWorksOpen(true)}
+            className="cursor-pointer text-[#0d0019]/70 hover:text-[#0d0019] transition-colors font-medium"
+          >
+            How It Works
+          </button>
           {isAdmin && (
             <Link 
               href="/admin" 
@@ -129,6 +221,11 @@ export function Header() {
           <ConnectButton />
         )}
       </div>
+
+      <HowItWorksModal 
+        isOpen={isHowItWorksOpen} 
+        onClose={() => setIsHowItWorksOpen(false)} 
+      />
     </header>
   );
 }
