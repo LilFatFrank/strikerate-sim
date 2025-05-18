@@ -609,7 +609,7 @@ export default function MatchPage() {
         </div>
 
         {/* Predictions List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
           <table className="w-full table-fixed">
             <thead>
               <tr className="bg-[#4f4395]">
