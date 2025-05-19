@@ -53,101 +53,103 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-6 md:py-8 px-4 md:px-6">
       <div className="container mx-auto">
-        <h1 className="text-4xl font-bold text-[#0d0019] mb-3">Leaderboard</h1>
+        <h1 className="text-2xl md:text-4xl font-bold text-[#0d0019] mb-4 md:mb-6">Leaderboard</h1>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="bg-[#4f4395]">
-                <th className="w-[35%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  User
-                </th>
-                <th className="w-[12%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Wins
-                </th>
-                <th className="w-[12%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Predictions
-                </th>
-                <th className="w-[12%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Winnings
-                </th>
-                <th className="w-[12%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Points
-                </th>
-                <th className="w-[17%] px-4 py-1 text-left text-sm font-bold text-[#fff]">
-                  strikerate
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#4f4395]/5">
-              {users.map((user, index) => (
-                <tr 
-                  key={user.id}
-                  className={`group hover:bg-[#4f4395]/5 transition-colors cursor-pointer ${
-                    user.walletAddress === authUser?.walletAddress ? 'bg-[#4f4395]/5' : ''
-                  }`}
-                  onClick={() => router.push(`/${user.walletAddress}`)}
-                >
-                  <td className="px-4 py-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium w-6">
-                        {index === 0 ? '👑' : <>&nbsp;</>}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#0d0019] text-[14px] font-medium group-hover:text-[#4f4395] transition-colors">
-                          {user.walletAddress.slice(0, 4)}...{user.walletAddress.slice(-4)}
-                        </span>
-                        {user.walletAddress === authUser?.walletAddress && (
-                          <span className="px-2 py-[2px] text-[12px] font-medium text-white bg-[#4f4395] rounded">
-                            You
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-medium">
-                      {user.totalWins}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px]">
-                      {user.totalPredictions}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                      {user.totalAmountWon}{" "}
-                      <img
-                        src={"/assets/usdc-coin.svg"}
-                        alt="usdc"
-                        className="w-4 h-4"
-                      />
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-medium">
-                      {user.totalPoints.toFixed(3)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-bold">
-                      {user.totalPredictions > 0 
-                        ? (user.totalPoints / user.totalPredictions).toFixed(2)
-                        : '0.00'}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-fixed">
+              <thead>
+                <tr className="bg-[#4f4395]">
+                  <th className="w-[35%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    User
+                  </th>
+                  <th className="w-[12%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Wins
+                  </th>
+                  <th className="w-[12%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Predictions
+                  </th>
+                  <th className="w-[12%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Winnings
+                  </th>
+                  <th className="w-[12%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Points
+                  </th>
+                  <th className="w-[17%] px-4 py-3 text-left text-xs md:text-sm font-bold text-[#fff]">
+                    strikerate
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#4f4395]/5">
+                {users.map((user, index) => (
+                  <tr 
+                    key={user.id}
+                    className={`group hover:bg-[#4f4395]/5 transition-colors cursor-pointer ${
+                      user.walletAddress === authUser?.walletAddress ? 'bg-[#4f4395]/5' : ''
+                    }`}
+                    onClick={() => router.push(`/${user.walletAddress}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] md:text-[14px] font-medium w-6">
+                          {index === 0 ? '👑' : <>&nbsp;</>}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium group-hover:text-[#4f4395] transition-colors leading-tight">
+                            {user.walletAddress.slice(0, 4)}...{user.walletAddress.slice(-4)}
+                          </span>
+                          {user.walletAddress === authUser?.walletAddress && (
+                            <span className="px-2 py-1 text-[11px] md:text-[12px] font-medium text-white bg-[#4f4395] rounded">
+                              You
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium leading-tight">
+                        {user.totalWins}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[#0d0019] text-[13px] md:text-[14px] leading-tight">
+                        {user.totalPredictions}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium flex items-center gap-1 leading-tight">
+                        {user.totalAmountWon}{" "}
+                        <img
+                          src={"/assets/usdc-coin.svg"}
+                          alt="usdc"
+                          className="w-3 h-3 md:w-4 md:h-4"
+                        />
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium leading-tight">
+                        {user.totalPoints.toFixed(3)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[#0d0019] text-[13px] md:text-[14px] font-bold leading-tight">
+                        {user.totalPredictions > 0 
+                          ? (user.totalPoints / user.totalPredictions).toFixed(2)
+                          : '0.00'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {users.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-            <p className="text-[#0d0019]/70">No users found.</p>
+          <div className="text-center py-8 md:py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p className="text-[#0d0019]/70 text-sm md:text-base">No users found.</p>
           </div>
         )}
       </div>

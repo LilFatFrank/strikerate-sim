@@ -131,14 +131,14 @@ export default function MatchesPage() {
   };
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-6 md:py-8 px-4 md:px-6">
       <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-3">
-          <h1 className="text-4xl font-bold text-[#0d0019]">Matches</h1>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+          <h1 className="text-2xl md:text-4xl font-bold text-[#0d0019]">Matches</h1>
           {isAdmin && (
             <button
               onClick={() => setIsCreating(true)}
-              className="bg-[#4f4395] text-white font-semibold cursor-pointer px-4 py-2 rounded-lg hover:bg-[#433a7d] transition-colors"
+              className="bg-[#4f4395] text-white font-semibold cursor-pointer px-4 py-2 rounded-lg hover:bg-[#433a7d] transition-colors w-full md:w-auto"
             >
               Create Match
             </button>
@@ -146,10 +146,10 @@ export default function MatchesPage() {
         </div>
 
         {isCreating ? (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-            <h2 className="text-2xl font-semibold text-[#0d0019] mb-4">Create Match</h2>
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-[#0d0019] mb-4">Create Match</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#0d0019]/70">Team 1</label>
                   <input
@@ -157,7 +157,7 @@ export default function MatchesPage() {
                     placeholder='India'
                     value={formData.team1}
                     onChange={(e) => setFormData({ ...formData, team1: e.target.value })}
-                    className="mt-1 block w-full rounded-lg shadow-sm  outline-none border-none py-1 px-4"
+                    className="mt-1 block w-full rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                     required
                     disabled={isLoading}
                   />
@@ -169,14 +169,14 @@ export default function MatchesPage() {
                     placeholder='England'
                     value={formData.team2}
                     onChange={(e) => setFormData({ ...formData, team2: e.target.value })}
-                    className="mt-1 block w-full rounded-lg shadow-sm  outline-none border-none py-1 px-4"
+                    className="mt-1 block w-full rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                     required
                     disabled={isLoading}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-col md:flex-row justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -186,14 +186,14 @@ export default function MatchesPage() {
                       team2: ''
                     });
                   }}
-                  className="px-4 py-2 border border-gray-200 font-semibold rounded-lg text-[#0d0019]/70 hover:bg-gray-50 transition-colors"
+                  className="w-full md:w-auto px-4 py-2 border border-gray-200 font-semibold rounded-lg text-[#0d0019]/70 hover:bg-gray-50 transition-colors"
                   disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#4f4395] text-white font-bold rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
+                  className="w-full md:w-auto px-4 py-2 bg-[#4f4395] text-white font-bold rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Creating...' : 'Create'}
@@ -204,114 +204,116 @@ export default function MatchesPage() {
         ) : null}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="bg-[#4f4395]">
-                <th className="px-4 py-1 text-left text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '30%' : '35%' }}>
-                  Match
-                </th>
-                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Status
-                </th>
-                <th className="px-4 py-1 text-left text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '10%' : '15%' }}>
-                  Pool
-                </th>
-                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Predictions
-                </th>
-                <th className="w-[20%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Score
-                </th>
-                {isAdmin && (
-                  <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                    Actions
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-fixed">
+              <thead>
+                <tr className="bg-[#4f4395]">
+                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '30%' : '35%' }}>
+                    Match
                   </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#4f4395]/5">
-              {matches.map((match) => (
-                <tr 
-                  key={match.id}
-                  className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/matches/${match.id}`)}
-                >
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-medium group-hover:text-[#4f4395] transition-colors">
-                      {match.team1} vs {match.team2}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className={`text-xs font-medium ${getStatusBadge(match.status)}`}>
-                      {match.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                      {match.totalPool}{" "}
-                      <img
-                        src={"/assets/usdc-coin.svg"}
-                        alt="usdc"
-                        className="w-4 h-4"
-                      />
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    <span className="text-[#0d0019] text-[14px]">
-                      {match.totalPredictions}
-                    </span>
-                  </td>
-                  <td className="px-4 py-1">
-                    {match.finalScore ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[12px] text-[#0d0019]">
-                          {match.team1}: {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
-                        </span>
-                        <span className="text-[12px] text-[#0d0019]">
-                          {match.team2}: {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-[#0d0019]/50">-</span>
-                    )}
-                  </td>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: isAdmin ? '10%' : '15%' }}>
+                    Pool
+                  </th>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Predictions
+                  </th>
+                  <th className="w-[20%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Score
+                  </th>
                   {isAdmin && (
-                    <td className="px-4 py-1">
-                      {match.status === 'UPCOMING' && (
-                        <LockMatchButton 
-                          matchId={match.id}
-                          onSuccess={() => {}}
-                        />
-                      )}
-                      {match.status === 'LOCKED' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedMatch(match);
-                          }}
-                          className="cursor-pointer font-medium bg-[#3fe0aa]/80 text-white px-2 py-[2px] rounded hover:bg-[#3fe0aa] transition-colors disabled:bg-[#3fe0aa]/50 disabled:cursor-not-allowed"
-                        >
-                          Complete
-                        </button>
-                      )}
-                    </td>
+                    <th className="w-[10%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                      Actions
+                    </th>
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#4f4395]/5">
+                {matches.map((match) => (
+                  <tr 
+                    key={match.id}
+                    className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/matches/${match.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <span className="text-[13px] md:text-[14px] font-medium text-[#0d0019] group-hover:text-[#4f4395] transition-colors leading-tight">
+                        {match.team1} vs {match.team2}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[11px] md:text-xs font-medium ${getStatusBadge(match.status)}`}>
+                        {match.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[13px] md:text-[14px] font-medium text-[#0d0019] flex items-center gap-1 leading-tight">
+                        {match.totalPool}{" "}
+                        <img
+                          src={"/assets/usdc-coin.svg"}
+                          alt="usdc"
+                          className="w-3 h-3 md:w-4 md:h-4"
+                        />
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[13px] md:text-[14px] text-[#0d0019] leading-tight">
+                        {match.totalPredictions}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {match.finalScore ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                            {match.team1}: {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
+                          </span>
+                          <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                            {match.team2}: {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[#0d0019]/50 text-[13px] md:text-[14px] leading-tight">-</span>
+                      )}
+                    </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3">
+                        {match.status === 'UPCOMING' && (
+                          <LockMatchButton 
+                            matchId={match.id}
+                            onSuccess={() => {}}
+                          />
+                        )}
+                        {match.status === 'LOCKED' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedMatch(match);
+                            }}
+                            className="cursor-pointer font-medium bg-[#3fe0aa]/80 text-white px-2 py-[2px] rounded hover:bg-[#3fe0aa] transition-colors disabled:bg-[#3fe0aa]/50 disabled:cursor-not-allowed text-xs md:text-sm"
+                          >
+                            Complete
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {matches.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-            <p className="text-[#0d0019]/70">No matches available.</p>
+          <div className="text-center py-8 md:py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p className="text-[#0d0019]/70 text-sm md:text-base">No matches available.</p>
           </div>
         )}
       </div>
 
       {selectedMatch && (
-        <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+        <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-4 md:p-6 max-w-md w-full shadow-lg">
             <div className="flex justify-end items-center mb-2">
               <button
                 onClick={() => setSelectedMatch(null)}

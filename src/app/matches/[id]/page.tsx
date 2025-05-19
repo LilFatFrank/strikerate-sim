@@ -363,9 +363,9 @@ export default function MatchPage() {
     user?.walletAddress === process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS;
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex w-full items-center justify-between">
+    <div className="min-h-screen py-6 md:py-8 px-4 md:px-6">
+      <div className="container mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 cursor-pointer text-[#0d0019]/70 hover:text-[#0d0019] transition-colors"
@@ -385,53 +385,54 @@ export default function MatchPage() {
             </svg>
             <span>Back</span>
           </button>
-          {isAdmin && match.status === "UPCOMING" && (
-            <LockMatchButton matchId={match.id} />
-          )}
-          {isAdmin && match.status === "LOCKED" && (
-            <button
-              onClick={() => setSelectedMatch(match)}
-              className="cursor-pointer font-medium bg-[#3fe0aa]/80 text-white px-2 py-[2px] rounded hover:bg-[#3fe0aa] transition-colors disabled:bg-[#3fe0aa]/50 disabled:cursor-not-allowed"
-            >
-              Complete
-            </button>
-          )}
+          <div className="flex gap-3">
+            {isAdmin && match.status === "UPCOMING" && (
+              <LockMatchButton matchId={match.id} />
+            )}
+            {isAdmin && match.status === "LOCKED" && (
+              <button
+                onClick={() => setSelectedMatch(match)}
+                className="cursor-pointer font-medium bg-[#3fe0aa]/80 text-white px-3 py-1.5 rounded hover:bg-[#3fe0aa] transition-colors disabled:bg-[#3fe0aa]/50 disabled:cursor-not-allowed text-sm"
+              >
+                Complete
+              </button>
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
           {/* Match Header */}
           <div className="bg-gradient-to-b from-[#9c53c7] to-[#6857c9] rounded-xl shadow-sm overflow-hidden">
-            <div className="p-4 flex flex-col justify-between items-start w-full h-full">
-              <div className="flex justify-between items-center mb-10 w-full">
+            <div className="p-4 md:p-6 flex flex-col justify-between items-start w-full h-full">
+              <div className="flex justify-between items-center mb-6 md:mb-10 w-full">
                 <div className="flex flex-col items-start justify-center gap-1 text-[#fff]">
                   {match.status === "COMPLETED" && match.finalScore ? (
-                    <h1 className="text-3xl font-bold">
-                      {match.finalScore.team1Score}/
-                      {match.finalScore.team1Wickets}
+                    <h1 className="text-2xl md:text-3xl font-bold">
+                      {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
                     </h1>
                   ) : null}
                   <h1
                     className={
                       match.status === "COMPLETED" && match.finalScore
-                        ? "text-xl font-medium"
-                        : "text-4xl font-bold"
+                        ? "text-lg md:text-xl font-medium"
+                        : "text-2xl md:text-4xl font-bold"
                     }
                   >
                     {match.team1}
                   </h1>
                 </div>
-                <h1 className="text-xl font-bold text-[#fff]">vs</h1>
+                <h1 className="text-lg md:text-xl font-bold text-[#fff]">vs</h1>
                 <div className="flex flex-col items-end justify-center gap-1 text-[#fff]">
                   {match.status === "COMPLETED" && match.finalScore ? (
-                    <h1 className="text-3xl font-bold">
-                      {match.finalScore.team2Score}/
-                      {match.finalScore.team2Wickets}
+                    <h1 className="text-2xl md:text-3xl font-bold">
+                      {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
                     </h1>
                   ) : null}
                   <h1
                     className={
                       match.status === "COMPLETED" && match.finalScore
-                        ? "text-xl font-medium"
-                        : "text-4xl font-bold"
+                        ? "text-lg md:text-xl font-medium"
+                        : "text-2xl md:text-4xl font-bold"
                     }
                   >
                     {match.team2}
@@ -439,16 +440,16 @@ export default function MatchPage() {
                 </div>
               </div>
               <div className="mt-2 flex flex-col items-start gap-1">
-                <p className="text-[#fff] flex items-center gap-1">
+                <p className="text-[#fff] flex items-center gap-1 text-sm md:text-base">
                   <span className="mr-1 font-semibold">Pool:</span>
                   {match.totalPool}
                   <img
                     src={"/assets/usdc-coin.svg"}
                     alt="usdc"
-                    className="w-4 h-4"
+                    className="w-3 h-3 md:w-4 md:h-4"
                   />
                 </p>
-                <p className="text-[#fff]">
+                <p className="text-[#fff] text-sm md:text-base">
                   <span className="mr-1 font-semibold">Predictions:</span>
                   {match.totalPredictions}
                 </p>
@@ -459,10 +460,10 @@ export default function MatchPage() {
           {/* Prediction Form */}
           {match.status === "UPCOMING" && user && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-4">
+              <div className="p-4 md:p-6">
                 {predictions.some((p) => p.userId === user.walletAddress) ? (
                   <div className="text-center py-4">
-                    <p className="text-[#0d0019]/70">
+                    <p className="text-[#0d0019]/70 text-sm md:text-base">
                       You have already made a prediction for this match
                     </p>
                   </div>
@@ -470,13 +471,13 @@ export default function MatchPage() {
                   <>
                     <form
                       onSubmit={handlePredictionSubmit}
-                      className="space-y-10 flex flex-col w-full h-full justify-between items-start"
+                      className="space-y-6 md:space-y-10 flex flex-col w-full h-full justify-between items-start"
                     >
                       <div className="w-full h-full space-y-3">
-                        <h2 className="text-xl font-semibold text-[#0d0019]">
+                        <h2 className="text-lg md:text-xl font-semibold text-[#0d0019]">
                           Make a Prediction
                         </h2>
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                           <div>
                             <label className="block text-sm font-medium text-[#0d0019]/70 mb-2">
                               {match.team1}
@@ -498,7 +499,7 @@ export default function MatchPage() {
                                     }));
                                   }
                                 }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-1 px-4"
+                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                               />
                               <input
                                 type="text"
@@ -523,7 +524,7 @@ export default function MatchPage() {
                                     }));
                                   }
                                 }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-1 px-4"
+                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                               />
                             </div>
                           </div>
@@ -548,7 +549,7 @@ export default function MatchPage() {
                                     }));
                                   }
                                 }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-1 px-4"
+                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                               />
                               <input
                                 type="text"
@@ -573,7 +574,7 @@ export default function MatchPage() {
                                     }));
                                   }
                                 }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-1 px-4"
+                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
                               />
                             </div>
                           </div>
@@ -582,7 +583,7 @@ export default function MatchPage() {
                       <button
                         type="submit"
                         disabled={isMakingPrediction}
-                        className="cursor-pointer relative w-full bg-[#4f4395] text-white px-4 py-2 rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
+                        className="cursor-pointer relative w-full bg-[#4f4395] text-white px-4 py-3 rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
                       >
                         {isMakingPrediction ? (
                           "Making Prediction..."
@@ -594,7 +595,7 @@ export default function MatchPage() {
                               <img
                                 src={"/assets/usdc-coin.svg"}
                                 alt="usdc"
-                                className="w-5 h-5"
+                                className="w-4 h-4 md:w-5 md:h-5"
                               />
                             </span>
                           </>
@@ -610,149 +611,126 @@ export default function MatchPage() {
 
         {/* Predictions List */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="bg-[#4f4395]">
-                <th
-                  className="px-4 py-1 text-left text-sm font-medium text-[#fff]"
-                  style={{ width: "25%" }}
-                >
-                  Prediction
-                </th>
-                <th
-                  className="px-4 py-1 text-left text-sm font-medium text-[#fff]"
-                  style={{ width: "25%" }}
-                >
-                  User
-                </th>
-                <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Status
-                </th>
-                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Points
-                </th>
-                <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Prize
-                </th>
-                <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#4f4395]/5">
-              {predictions.map((prediction) => {
-                const isUserPrediction =
-                  prediction.userId === user?.walletAddress;
-                const shouldBlur =
-                  match.status === "UPCOMING" && !isUserPrediction;
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-fixed">
+              <thead>
+                <tr className="bg-[#4f4395]">
+                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: "25%" }}>
+                    Prediction
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: "25%" }}>
+                    User
+                  </th>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Status
+                  </th>
+                  <th className="w-[10%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Points
+                  </th>
+                  <th className="w-[10%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Prize
+                  </th>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#4f4395]/5">
+                {predictions.map((prediction) => {
+                  const isUserPrediction = prediction.userId === user?.walletAddress;
+                  const shouldBlur = match.status === "UPCOMING" && !isUserPrediction;
 
-                return (
-                  <tr
-                    key={prediction.id}
-                    className={`group hover:bg-[#4f4395]/5 transition-colors cursor-pointer ${
-                      isUserPrediction ? "bg-[#4f4395]/5" : ""
-                    } ${prediction.isWinner ? "bg-[#3fe0aa]/5" : ""}`}
-                    onClick={() => router.push(`/${prediction.userId}`)}
-                  >
-                    <td className="px-4 py-1">
-                      {match.status === "UPCOMING" && !isUserPrediction ? (
-                        <div className="text-[12px] text-[#0d0019]/50">
-                          Hidden until match starts
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[12px] text-[#0d0019]">
-                            {match.team1}: {prediction.team1Score}/
-                            {prediction.team1Wickets}
-                          </span>
-                          <span className="text-[12px] text-[#0d0019]">
-                            {match.team2}: {prediction.team2Score}/
-                            {prediction.team2Wickets}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-1">
-                      {match.status === "UPCOMING" && !isUserPrediction ? (
-                        <div className="text-[12px] text-[#0d0019]/50">
-                          Hidden
-                        </div>
-                      ) : (
-                        <span className="text-[12px] text-[#0d0019] font-mono group-hover:text-[#4f4395] transition-colors">
-                          {prediction.userId.slice(0, 4)}...
-                          {prediction.userId.slice(-4)}
+                  return (
+                    <tr
+                      key={prediction.id}
+                      className={`group hover:bg-[#4f4395]/5 transition-colors cursor-pointer ${
+                        isUserPrediction ? "bg-[#4f4395]/5" : ""
+                      } ${prediction.isWinner ? "bg-[#3fe0aa]/5" : ""}`}
+                      onClick={() => router.push(`/${prediction.userId}`)}
+                    >
+                      <td className="px-4 py-3">
+                        {match.status === "UPCOMING" && !isUserPrediction ? (
+                          <div className="text-[11px] md:text-[12px] text-[#0d0019]/50">
+                            Hidden until match starts
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                              {match.team1}: {prediction.team1Score}/{prediction.team1Wickets}
+                            </span>
+                            <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                              {match.team2}: {prediction.team2Score}/{prediction.team2Wickets}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[11px] md:text-[12px] text-[#0d0019] font-mono group-hover:text-[#4f4395] transition-colors leading-tight">
+                          {prediction.userId.slice(0, 4)}...{prediction.userId.slice(-4)}
                         </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-1">
-                      <div className="flex flex-col gap-1">
-                        {isUserPrediction && (
-                          <span className="text-xs font-medium text-[#4f4395]">
-                            Your Prediction
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-0.5">
+                          {isUserPrediction && (
+                            <span className="text-[11px] md:text-xs font-medium text-[#4f4395]">
+                              Your Prediction
+                            </span>
+                          )}
+                          {prediction.isWinner && (
+                            <span className="text-[11px] md:text-xs font-medium text-[#3fe0aa]">
+                              Winner
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {match.status === "COMPLETED" && (
+                          <span className="text-[13px] md:text-[14px] text-[#0d0019] font-medium leading-tight">
+                            {prediction.pointsEarned?.toFixed(3) || "0.000"}
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
                         {prediction.isWinner && (
-                          <span className="text-xs font-medium text-[#3fe0aa]">
-                            Winner
+                          <span className="text-[13px] md:text-[14px] text-[#0d0019] font-medium flex items-center gap-1 leading-tight">
+                            {prediction.amountWon}{" "}
+                            <img
+                              src={"/assets/usdc-coin.svg"}
+                              alt="usdc"
+                              className="w-3 h-3 md:w-4 md:h-4"
+                            />
                           </span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-1">
-                      {match.status === "COMPLETED" && (
-                        <span className="text-[#0d0019] text-[14px] font-medium">
-                          {prediction.pointsEarned?.toFixed(3) || "0.000"}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-1">
-                      {prediction.isWinner && (
-                        <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                          {prediction.amountWon}{" "}
-                          <img
-                            src={"/assets/usdc-coin.svg"}
-                            alt="usdc"
-                            className="w-4 h-4"
-                          />
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-1">
-                      {prediction.isWinner &&
-                        isUserPrediction &&
-                        !prediction.hasClaimed && (
+                      </td>
+                      <td className="px-4 py-3">
+                        {prediction.isWinner && isUserPrediction && !prediction.hasClaimed && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleClaim(
-                                match.id,
-                                prediction.id,
-                                prediction.amountWon!
-                              );
+                              handleClaim(match.id, prediction.id, prediction.amountWon!);
                             }}
                             disabled={isClaiming}
-                            className="px-3 py-1 text-sm font-medium text-white bg-[#3fe0aa] rounded-lg hover:bg-[#3fe0aa]/80 transition-colors disabled:opacity-50"
+                            className="px-3 py-1.5 text-xs md:text-sm font-medium text-white bg-[#3fe0aa] rounded-lg hover:bg-[#3fe0aa]/80 transition-colors disabled:opacity-50"
                           >
                             {isClaiming ? "Claiming..." : "Claim Prize"}
                           </button>
                         )}
-                      {prediction.isWinner &&
-                        isUserPrediction &&
-                        prediction.hasClaimed && (
-                          <span className="text-xs font-medium text-[#0d0019]/50">
+                        {prediction.isWinner && isUserPrediction && prediction.hasClaimed && (
+                          <span className="text-[11px] md:text-xs font-medium text-[#0d0019]/50">
                             Prize Claimed
                           </span>
                         )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {predictions.length === 0 && (
-            <div className="text-center py-12 bg-white">
-              <p className="text-[#0d0019]/70">No predictions yet</p>
+            <div className="text-center py-8 md:py-12 bg-white">
+              <p className="text-[#0d0019]/70 text-sm md:text-base">No predictions yet</p>
             </div>
           )}
         </div>
@@ -760,26 +738,16 @@ export default function MatchPage() {
 
       {/* Complete Match Modal */}
       {selectedMatch && (
-        <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+        <div className="fixed inset-0 bg-[#0d0019]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-4 md:p-6 max-w-md w-full shadow-lg">
             <div className="flex justify-end items-center mb-2">
               <button
                 onClick={() => setSelectedMatch(null)}
                 className="text-[#0d0019]/50 hover:text-[#0d0019] transition-colors"
               >
                 <span className="sr-only">Close</span>
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>

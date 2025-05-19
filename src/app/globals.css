@@ -36,4 +36,5 @@ body {
 * {
   scroll-behavior: smooth;
   box-sizing: border-box;
+  scrollbar-width: 1px;
 }

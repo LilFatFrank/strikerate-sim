@@ -172,18 +172,18 @@ export default function UserProfilePage({
   const isCurrentUser = authUser?.walletAddress === wallet;
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen py-6 md:py-8 px-4 md:px-6">
+      <div className="container mx-auto">
         {/* User Profile Section */}
-        <div className="bg-gradient-to-b from-[#9c53c7] to-[#6857c9] rounded-xl shadow-sm p-4 mb-8">
-          <h1 className="text-2xl font-bold text-[#fff] mb-6">
+        <div className="bg-gradient-to-b from-[#9c53c7] to-[#6857c9] rounded-xl shadow-sm p-4 md:p-6 mb-6 md:mb-8">
+          <h1 className="text-xl md:text-2xl font-bold text-[#fff] mb-4 md:mb-6">
             {isCurrentUser ? "Your Profile" : "User Profile"}
           </h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
             <div>
-              <p className="text-sm text-[#fff]/70">Wallet Address</p>
+              <p className="text-xs md:text-sm text-[#fff]/70">Wallet Address</p>
               <div className="flex items-center gap-2">
-                <p className="text-lg font-medium text-[#fff] font-mono">
+                <p className="text-base md:text-lg font-medium text-[#fff] font-mono">
                   {user.walletAddress.slice(0, 4)}...
                   {user.walletAddress.slice(-4)}
                 </p>
@@ -193,7 +193,7 @@ export default function UserProfilePage({
                   title="Copy wallet address"
                 >
                   <svg
-                    className="w-4 h-4"
+                    className="w-3 h-3 md:w-4 md:h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -209,31 +209,31 @@ export default function UserProfilePage({
               </div>
             </div>
             <div>
-              <p className="text-sm text-[#fff]/70">Total Predictions</p>
-              <p className="text-lg font-medium text-[#fff]">
+              <p className="text-xs md:text-sm text-[#fff]/70">Total Predictions</p>
+              <p className="text-base md:text-lg font-medium text-[#fff]">
                 {user.totalPredictions}
               </p>
             </div>
             <div>
-              <p className="text-sm text-[#fff]/70">Total Wins</p>
-              <p className="text-lg font-medium text-[#fff]">
+              <p className="text-xs md:text-sm text-[#fff]/70">Total Wins</p>
+              <p className="text-base md:text-lg font-medium text-[#fff]">
                 {user.totalWins}
               </p>
             </div>
             <div>
-              <p className="text-sm text-[#fff]/70">Total Winnings</p>
-              <p className="text-lg font-medium text-[#fff] flex items-center gap-1">
+              <p className="text-xs md:text-sm text-[#fff]/70">Total Winnings</p>
+              <p className="text-base md:text-lg font-medium text-[#fff] flex items-center gap-1">
                 {user.totalAmountWon}{" "}
                 <img
                   src="/assets/usdc-coin.svg"
                   alt="usdc"
-                  className="w-5 h-5"
+                  className="w-4 h-4 md:w-5 md:h-5"
                 />
               </p>
             </div>
             <div>
-              <p className="text-sm text-[#fff]/70 font-bold">strikerate</p>
-              <p className="text-lg font-bold text-[#fff]">
+              <p className="text-xs md:text-sm text-[#fff]/70 font-bold">strikerate</p>
+              <p className="text-base md:text-lg font-bold text-[#fff]">
                 {(user.totalPoints / user.totalPredictions).toFixed(2)}
               </p>
             </div>
@@ -242,146 +242,148 @@ export default function UserProfilePage({
 
         {/* Predictions History */}
         <div className="rounded-xl shadow-sm bg-white border-gray-100 overflow-hidden">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="bg-[#4f4395]">
-                <th
-                  className="px-4 py-1 text-left text-sm font-medium text-[#fff]"
-                  style={{ width: "25%" }}
-                >
-                  Match
-                </th>
-                <th
-                  className="px-4 py-1 text-left text-sm font-medium text-[#fff]"
-                  style={{ width: "25%" }}
-                >
-                  Prediction
-                </th>
-                <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Amount
-                </th>
-                <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Status
-                </th>
-                <th className="w-[20%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                  Winnings
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#4f4395]/5">
-              {predictions.map((prediction) => {
-                const match = matches[prediction.matchId];
-                return (
-                  <tr
-                    key={prediction.id}
-                    className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
-                    onClick={() =>
-                      router.push(`/matches/${prediction.matchId}`)
-                    }
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] table-fixed">
+              <thead>
+                <tr className="bg-[#4f4395]">
+                  <th
+                    className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]"
+                    style={{ width: "25%" }}
                   >
-                    <td className="px-4 py-1">
-                      {match ? (
-                        <div className="text-[12px] text-[#0d0019]">
-                          {match.team1} vs {match.team2}
+                    Match
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]"
+                    style={{ width: "25%" }}
+                  >
+                    Prediction
+                  </th>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Amount
+                  </th>
+                  <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Status
+                  </th>
+                  <th className="w-[20%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                    Winnings
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#4f4395]/5">
+                {predictions.map((prediction) => {
+                  const match = matches[prediction.matchId];
+                  return (
+                    <tr
+                      key={prediction.id}
+                      className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
+                      onClick={() =>
+                        router.push(`/matches/${prediction.matchId}`)
+                      }
+                    >
+                      <td className="px-4 py-3">
+                        {match ? (
+                          <div className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                            {match.team1} vs {match.team2}
+                            <span
+                              className={`ml-2 text-[10px] md:text-xs font-medium rounded-full ${getStatusBadge(match.status)}`}
+                            >
+                              {match.status}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] md:text-[12px] text-[#0d0019]/50 leading-tight">
+                            Loading...
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-0.5">
                           <span
-                            className={`ml-2 text-xs font-medium rounded-full ${getStatusBadge(match.status)}`}
+                            className={`text-[11px] md:text-[12px] leading-tight ${
+                              match?.status === "UPCOMING"
+                                ? "text-[#0d0019]/50"
+                                : "text-[#0d0019]"
+                            }`}
                           >
-                            {match.status}
+                            {match?.status === "UPCOMING" ? (
+                              <>Hidden</>
+                            ) : (
+                              <>
+                                {match?.team1}: {prediction.team1Score}/
+                                {prediction.team1Wickets}
+                              </>
+                            )}
+                          </span>
+                          <span
+                            className={`text-[11px] md:text-[12px] leading-tight ${
+                              match?.status === "UPCOMING"
+                                ? "text-[#0d0019]/50"
+                                : "text-[#0d0019]"
+                            }`}
+                          >
+                            {match?.status === "UPCOMING" ? (
+                              <>Hidden</>
+                            ) : (
+                              <>
+                                {match?.team2}: {prediction.team2Score}/
+                                {prediction.team2Wickets}
+                              </>
+                            )}
                           </span>
                         </div>
-                      ) : (
-                        <div className="text-[12px] text-[#0d0019]/50">
-                          Loading...
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-1">
-                      <div className="flex flex-col gap-1">
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium flex items-center gap-1 leading-tight">
+                          {prediction.amount}{" "}
+                          <img
+                            src="/assets/usdc-coin.svg"
+                            alt="usdc"
+                            className="w-3 h-3 md:w-4 md:h-4"
+                          />
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
                         <span
-                          className={`text-[12px] ${
-                            match?.status === "UPCOMING"
-                              ? "text-[#0d0019]/50"
-                              : "text-[#0d0019]"
+                          className={`text-[10px] md:text-xs font-medium rounded-full ${
+                            prediction.isWinner
+                              ? "text-[#3fe0aa]"
+                              : prediction.amountWon === undefined
+                              ? "text-[#ffd400]"
+                              : "text-[#ff503b]"
                           }`}
                         >
-                          {match?.status === "UPCOMING" ? (
-                            <>Hidden</>
-                          ) : (
-                            <>
-                              {match?.team1}: {prediction.team1Score}/
-                              {prediction.team1Wickets}
-                            </>
-                          )}
-                        </span>
-                        <span
-                          className={`text-[12px] ${
-                            match?.status === "UPCOMING"
-                              ? "text-[#0d0019]/50"
-                              : "text-[#0d0019]"
-                          }`}
-                        >
-                          {match?.status === "UPCOMING" ? (
-                            <>Hidden</>
-                          ) : (
-                            <>
-                              {match?.team2}: {prediction.team2Score}/
-                              {prediction.team2Wickets}
-                            </>
-                          )}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-1">
-                      <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                        {prediction.amount}{" "}
-                        <img
-                          src="/assets/usdc-coin.svg"
-                          alt="usdc"
-                          className="w-4 h-4"
-                        />
-                      </span>
-                    </td>
-                    <td className="px-4 py-1">
-                      <span
-                        className={`text-xs font-medium rounded-full ${
-                          prediction.isWinner
-                            ? "text-[#3fe0aa]"
+                          {prediction.isWinner
+                            ? "won"
                             : prediction.amountWon === undefined
-                            ? "text-[#ffd400]"
-                            : "text-[#ff503b]"
-                        }`}
-                      >
-                        {prediction.isWinner
-                          ? "won"
-                          : prediction.amountWon === undefined
-                          ? "-"
-                          : "lost"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-1">
-                      <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                        {prediction.amountWon ? (
-                          <>
-                            {prediction.amountWon}{" "}
-                            <img
-                              src="/assets/usdc-coin.svg"
-                              alt="usdc"
-                              className="w-4 h-4"
-                            />
-                          </>
-                        ) : (
-                          "-"
-                        )}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                            ? "-"
+                            : "lost"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[#0d0019] text-[13px] md:text-[14px] font-medium flex items-center gap-1 leading-tight">
+                          {prediction.amountWon ? (
+                            <>
+                              {prediction.amountWon}{" "}
+                              <img
+                                src="/assets/usdc-coin.svg"
+                                alt="usdc"
+                                className="w-3 h-3 md:w-4 md:h-4"
+                              />
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           {predictions.length === 0 && (
-            <div className="text-center py-12 bg-white">
-              <p className="text-[#0d0019]/70">No predictions yet</p>
+            <div className="text-center py-8 md:py-12 bg-white">
+              <p className="text-[#0d0019]/70 text-sm md:text-base">No predictions yet</p>
             </div>
           )}
         </div>

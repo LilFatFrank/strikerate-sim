@@ -74,93 +74,95 @@ export default function Home() {
     title: string;
   }) => (
     <div className="mb-8">
-      <h2 className="text-2xl font-semibold text-[#0d0019] mb-3">{title}</h2>
+      <h2 className="text-xl md:text-2xl font-semibold text-[#0d0019] mb-3">{title}</h2>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full table-fixed">
-          <thead>
-            <tr className="bg-[#4f4395]">
-              <th className="w-[35%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                Match
-              </th>
-              <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                Status
-              </th>
-              <th className="w-[15%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                Pool
-              </th>
-              <th className="w-[10%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                Predictions
-              </th>
-              <th className="w-[30%] px-4 py-1 text-left text-sm font-medium text-[#fff]">
-                Score
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#4f4395]/5">
-            {matches.map((match) => (
-              <tr
-                key={match.id}
-                className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
-                onClick={() => push(`/matches/${match.id}`)}
-              >
-                <td className="px-4 py-1">
-                  <div className="flex flex-col">
-                    <span className="text-[#0d0019] text-[14px] font-medium group-hover:text-[#4f4395] transition-colors">
-                      {match.team1} vs {match.team2}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-1">
-                  <span
-                    className={`text-xs font-medium rounded-full ${getStatusBadge(
-                      match.status
-                    )}`}
-                  >
-                    {match.status}
-                  </span>
-                </td>
-                <td className="px-4 py-1">
-                  <span className="text-[#0d0019] text-[14px] font-medium flex items-center gap-1">
-                    {match.totalPool}{" "}
-                    <img
-                      src={"/assets/usdc-coin.svg"}
-                      alt="usdc"
-                      className="w-4 h-4"
-                    />
-                  </span>
-                </td>
-                <td className="px-4 py-1">
-                  <span className="text-[#0d0019] text-[14px]">
-                    {match.totalPredictions}
-                  </span>
-                </td>
-                <td className="px-4 py-1">
-                  {match.finalScore ? (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[12px] text-[#0d0019]">
-                        {match.team1}: {match.finalScore.team1Score}/
-                        {match.finalScore.team1Wickets}
-                      </span>
-                      <span className="text-[12px] text-[#0d0019]">
-                        {match.team2}: {match.finalScore.team2Score}/
-                        {match.finalScore.team2Wickets}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] table-fixed">
+            <thead>
+              <tr className="bg-[#4f4395]">
+                <th className="w-[35%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                  Match
+                </th>
+                <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                  Status
+                </th>
+                <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                  Pool
+                </th>
+                <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                  Predictions
+                </th>
+                <th className="w-[20%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
+                  Score
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#4f4395]/5">
+              {matches.map((match) => (
+                <tr
+                  key={match.id}
+                  className="group hover:bg-[#4f4395]/5 transition-colors cursor-pointer"
+                  onClick={() => push(`/matches/${match.id}`)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-[13px] md:text-[14px] font-medium text-[#0d0019] group-hover:text-[#4f4395] transition-colors leading-tight">
+                        {match.team1} vs {match.team2}
                       </span>
                     </div>
-                  ) : (
-                    <span className="text-[#0d0019]/50">-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`text-[11px] md:text-xs font-medium rounded-full ${getStatusBadge(
+                        match.status
+                      )}`}
+                    >
+                      {match.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-[13px] md:text-[14px] font-medium text-[#0d0019] flex items-center gap-1 leading-tight">
+                      {match.totalPool}{" "}
+                      <img
+                        src={"/assets/usdc-coin.svg"}
+                        alt="usdc"
+                        className="w-3 h-3 md:w-4 md:h-4"
+                      />
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-[13px] md:text-[14px] text-[#0d0019] leading-tight">
+                      {match.totalPredictions}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {match.finalScore ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                          {match.team1}: {match.finalScore.team1Score}/
+                          {match.finalScore.team1Wickets}
+                        </span>
+                        <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
+                          {match.team2}: {match.finalScore.team2Score}/
+                          {match.finalScore.team2Wickets}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-[#0d0019]/50 text-[13px] md:text-[14px] leading-tight">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen py-8">
-      <h1 className="text-4xl font-bold text-[#0d0019] mb-8">Matches</h1>
+    <div className="min-h-screen py-6 md:py-8 px-4 md:px-6">
+      <h1 className="text-2xl md:text-4xl font-bold text-[#0d0019] mb-6 md:mb-8 leading-tight">Matches</h1>
 
       {upcomingMatches.length > 0 && (
         <MatchTable matches={upcomingMatches} title="Upcoming" />
@@ -175,8 +177,8 @@ export default function Home() {
       )}
 
       {matches.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-          <p className="text-[#0d0019]/70">No matches available.</p>
+        <div className="text-center py-8 md:py-12 bg-white rounded-xl shadow-sm border border-gray-100">
+          <p className="text-[#0d0019]/70 text-sm md:text-base">No matches available.</p>
         </div>
       )}
     </div>
