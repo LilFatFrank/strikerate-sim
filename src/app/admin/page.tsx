@@ -121,10 +121,6 @@ export default function AdminDashboard() {
               <span className="text-sm md:text-base text-[#0d0019]/70">Total</span>
               <span className="text-sm md:text-base text-[#0d0019] font-medium">{stats.users.total}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm md:text-base text-[#0d0019]/70">Active</span>
-              <span className="text-sm md:text-base text-[#0d0019] font-medium">{stats.users.active}</span>
-            </div>
           </div>
         </div>
 

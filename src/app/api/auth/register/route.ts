@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { updateStats } from '@/lib/stats';
 
 export async function POST(req: Request) {
   try {
@@ -20,6 +21,13 @@ export async function POST(req: Request) {
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       });
+
+      // Update global stats
+      await updateStats((current) => ({
+        users: {
+          total: current.users.total + 1
+        }
+      }));
     }
 
     return NextResponse.json({ success: true });

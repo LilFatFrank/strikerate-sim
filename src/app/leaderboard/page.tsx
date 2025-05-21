@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, limit, startAfter, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -21,25 +21,106 @@ export default function LeaderboardPage() {
   const { user: authUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const USERS_PER_PAGE = 5;
 
   useEffect(() => {
-    // Query users ordered by points
-    const q = query(
-      collection(db, 'users'),
-      orderBy('totalPoints', 'desc')
+    // Initial load of users
+    const loadInitialUsers = async () => {
+      try {
+        const usersQuery = query(
+          collection(db, "users"),
+          orderBy("totalPoints", "desc"),
+          limit(USERS_PER_PAGE)
+        );
+
+        const snapshot = await getDocs(usersQuery);
+        const usersData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as User[];
+
+        setUsers(usersData);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === USERS_PER_PAGE);
+      } catch (error) {
+        console.error("Error loading initial users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialUsers();
+
+    // Set up real-time listener for new users
+    const usersQuery = query(
+      collection(db, "users"),
+      orderBy("totalPoints", "desc"),
+      limit(USERS_PER_PAGE)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const usersData = snapshot.docs.map(doc => ({
+    const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
+      const newUsers = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as User[];
-      setUsers(usersData);
-      setIsLoading(false);
+
+      // Only update if we're on the first page
+      if (!lastDoc) {
+        setUsers(newUsers);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === USERS_PER_PAGE);
+      }
     });
 
     return () => unsubscribe();
   }, []);
+
+  const loadMore = async () => {
+    if (!hasMore || !lastDoc) return;
+
+    try {
+      const nextQuery = query(
+        collection(db, "users"),
+        orderBy("totalPoints", "desc"),
+        startAfter(lastDoc),
+        limit(USERS_PER_PAGE)
+      );
+
+      const snapshot = await getDocs(nextQuery);
+      const newUsers = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as User[];
+
+      setUsers(prev => [...prev, ...newUsers]);
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === USERS_PER_PAGE);
+    } catch (error) {
+      console.error("Error loading more users:", error);
+    }
+  };
+
+  // Add intersection observer for infinite scroll
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, lastDoc]);
 
   if (isLoading) {
     return (
@@ -147,9 +228,15 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {users.length === 0 && (
+        {users.length === 0 && !isLoading && (
           <div className="text-center py-8 md:py-12 bg-white rounded-xl shadow-sm border border-gray-100">
             <p className="text-[#0d0019]/70 text-sm md:text-base">No users found.</p>
+          </div>
+        )}
+
+        {hasMore && (
+          <div ref={observerTarget} className="py-4 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f4395] mx-auto"></div>
           </div>
         )}
       </div>

@@ -33,6 +33,9 @@ Nonce: ${nonce}`;
       case "CREATE_MATCH":
         message = `Create Match
 Teams: ${operation?.team1} vs ${operation?.team2}
+Match Type: ${operation?.matchType}
+Stadium: ${operation?.stadium}
+Match Time: ${operation?.matchTime}
 Nonce: ${nonce}`;
         break;
       case "LOCK_MATCH":

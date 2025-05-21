@@ -15,7 +15,6 @@ export const statsSchema = z.object({
   }),
   users: z.object({
     total: z.number().min(0),
-    active: z.number().min(0), // Users who made predictions
   }),
   winnings: z.object({
     total: z.number().min(0), // Total USDC claimed
@@ -42,7 +41,6 @@ export const initialStats: Stats = {
   },
   users: {
     total: 0,
-    active: 0,
   },
   winnings: {
     total: 0,
@@ -54,5 +52,6 @@ export const initialStats: Stats = {
 
 // Helper function to validate stats
 export const validateStats = (stats: unknown): Stats => {
+  console.log(stats);
   return statsSchema.parse(stats);
 };

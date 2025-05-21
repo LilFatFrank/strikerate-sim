@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import {
@@ -10,6 +9,9 @@ import {
   query,
   where,
   orderBy,
+  limit,
+  getDocs,
+  startAfter,
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { Timestamp } from "firebase/firestore";
@@ -27,11 +29,17 @@ import { CompleteMatchForm } from "@/components/admin/CompleteMatchForm";
 import { toast } from "sonner";
 import { LockMatchButton } from "@/components/admin/LockMatchButton";
 
+type MatchType = "T20" | "ODI";
+
 interface Match {
   id: string;
   team1: string;
   team2: string;
   status: "UPCOMING" | "LOCKED" | "COMPLETED";
+  matchType: MatchType;
+  tournament: string;
+  stadium: string;
+  matchTime: string;
   totalPool: number;
   totalPredictions: number;
   finalScore?: {
@@ -61,6 +69,32 @@ interface Prediction {
   updatedAt: Timestamp;
 }
 
+// Add this helper function before the MatchPage component
+const formatMatchTime = (matchTime: string) => {
+  const date = new Date(matchTime);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  };
+
+  if (isToday) {
+    return date.toLocaleTimeString('en-US', timeOptions);
+  }
+
+  // Format date and time separately to avoid the 'at' separator
+  const dateStr = date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short'
+  });
+  const timeStr = date.toLocaleTimeString('en-US', timeOptions);
+  
+  return `${dateStr} ${timeStr}`;
+};
+
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
@@ -73,6 +107,9 @@ export default function MatchPage() {
   const [isMakingPrediction, setIsMakingPrediction] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const PREDICTIONS_PER_PAGE = 5;
   const [predictionForm, setPredictionForm] = useState({
     team1Score: "",
     team1Wickets: "",
@@ -89,19 +126,51 @@ export default function MatchPage() {
       setIsLoading(false);
     });
 
-    // Subscribe to predictions
+    // Initial load of predictions
+    const loadInitialPredictions = async () => {
+      try {
+        const predictionsQuery = query(
+          collection(db, "predictions"),
+          where("matchId", "==", matchId),
+          orderBy("createdAt", "desc"),
+          limit(PREDICTIONS_PER_PAGE)
+        );
+
+        const snapshot = await getDocs(predictionsQuery);
+        const predictionsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Prediction[];
+        setPredictions(predictionsData);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+      } catch (error) {
+        console.error("Error loading initial predictions:", error);
+      }
+    };
+
+    loadInitialPredictions();
+
+    // Set up real-time listener for new predictions
     const predictionsQuery = query(
       collection(db, "predictions"),
       where("matchId", "==", matchId),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
+      limit(PREDICTIONS_PER_PAGE)
     );
 
     const predictionsUnsubscribe = onSnapshot(predictionsQuery, (snapshot) => {
-      const predictionsData = snapshot.docs.map((doc) => ({
+      const newPredictions = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Prediction[];
-      setPredictions(predictionsData);
+
+      // Only update if we're on the first page
+      if (!lastDoc) {
+        setPredictions(newPredictions);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+      }
     });
 
     return () => {
@@ -109,6 +178,52 @@ export default function MatchPage() {
       predictionsUnsubscribe();
     };
   }, [matchId]);
+
+  const loadMore = async () => {
+    if (!hasMore || !lastDoc) return;
+
+    try {
+      const nextQuery = query(
+        collection(db, "predictions"),
+        where("matchId", "==", matchId),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDoc),
+        limit(PREDICTIONS_PER_PAGE)
+      );
+
+      const snapshot = await getDocs(nextQuery);
+      const newPredictions = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Prediction[];
+
+      setPredictions((prev) => [...prev, ...newPredictions]);
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+    } catch (error) {
+      console.error("Error loading more predictions:", error);
+    }
+  };
+
+  // Add intersection observer for infinite scroll
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, lastDoc]);
 
   const handlePredictionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -404,11 +519,24 @@ export default function MatchPage() {
           {/* Match Header */}
           <div className="bg-gradient-to-b from-[#9c53c7] to-[#6857c9] rounded-xl shadow-sm overflow-hidden">
             <div className="p-4 md:p-6 flex flex-col justify-between items-start w-full h-full">
+              {match?.stadium || match?.matchTime ? (
+                <div className="mb-2">
+                  <p className="md:text-sm text-xs text-white/80 font-medium">
+                    {match?.stadium}, {match?.matchTime ? formatMatchTime(match.matchTime) : ''}
+                  </p>
+                  {match?.status === "UPCOMING" ? (
+                    <p className="md:text-sm text-xs text-white/80 font-medium">
+                      Match locks before toss
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="flex justify-between items-center mb-6 md:mb-10 w-full">
                 <div className="flex flex-col items-start justify-center gap-1 text-[#fff]">
                   {match.status === "COMPLETED" && match.finalScore ? (
                     <h1 className="text-2xl md:text-3xl font-bold">
-                      {match.finalScore.team1Score}/{match.finalScore.team1Wickets}
+                      {match.finalScore.team1Score}/
+                      {match.finalScore.team1Wickets}
                     </h1>
                   ) : null}
                   <h1
@@ -425,7 +553,8 @@ export default function MatchPage() {
                 <div className="flex flex-col items-end justify-center gap-1 text-[#fff]">
                   {match.status === "COMPLETED" && match.finalScore ? (
                     <h1 className="text-2xl md:text-3xl font-bold">
-                      {match.finalScore.team2Score}/{match.finalScore.team2Wickets}
+                      {match.finalScore.team2Score}/
+                      {match.finalScore.team2Wickets}
                     </h1>
                   ) : null}
                   <h1
@@ -615,10 +744,16 @@ export default function MatchPage() {
             <table className="w-full min-w-[640px] table-fixed">
               <thead>
                 <tr className="bg-[#4f4395]">
-                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: "25%" }}>
+                  <th
+                    className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]"
+                    style={{ width: "25%" }}
+                  >
                     Prediction
                   </th>
-                  <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]" style={{ width: "25%" }}>
+                  <th
+                    className="px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]"
+                    style={{ width: "25%" }}
+                  >
                     User
                   </th>
                   <th className="w-[15%] px-4 py-3 text-left text-xs md:text-sm font-medium text-[#fff]">
@@ -637,8 +772,8 @@ export default function MatchPage() {
               </thead>
               <tbody className="divide-y divide-[#4f4395]/5">
                 {predictions.map((prediction) => {
-                  const isUserPrediction = prediction.userId === user?.walletAddress;
-                  const shouldBlur = match.status === "UPCOMING" && !isUserPrediction;
+                  const isUserPrediction =
+                    prediction.userId === user?.walletAddress;
 
                   return (
                     <tr
@@ -656,17 +791,20 @@ export default function MatchPage() {
                         ) : (
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
-                              {match.team1}: {prediction.team1Score}/{prediction.team1Wickets}
+                              {match.team1}: {prediction.team1Score}/
+                              {prediction.team1Wickets}
                             </span>
                             <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
-                              {match.team2}: {prediction.team2Score}/{prediction.team2Wickets}
+                              {match.team2}: {prediction.team2Score}/
+                              {prediction.team2Wickets}
                             </span>
                           </div>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-[11px] md:text-[12px] text-[#0d0019] font-mono group-hover:text-[#4f4395] transition-colors leading-tight">
-                          {prediction.userId.slice(0, 4)}...{prediction.userId.slice(-4)}
+                          {prediction.userId.slice(0, 4)}...
+                          {prediction.userId.slice(-4)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -703,23 +841,31 @@ export default function MatchPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        {prediction.isWinner && isUserPrediction && !prediction.hasClaimed && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleClaim(match.id, prediction.id, prediction.amountWon!);
-                            }}
-                            disabled={isClaiming}
-                            className="px-3 py-1.5 text-xs md:text-sm font-medium text-white bg-[#3fe0aa] rounded-lg hover:bg-[#3fe0aa]/80 transition-colors disabled:opacity-50"
-                          >
-                            {isClaiming ? "Claiming..." : "Claim Prize"}
-                          </button>
-                        )}
-                        {prediction.isWinner && isUserPrediction && prediction.hasClaimed && (
-                          <span className="text-[11px] md:text-xs font-medium text-[#0d0019]/50">
-                            Prize Claimed
-                          </span>
-                        )}
+                        {prediction.isWinner &&
+                          isUserPrediction &&
+                          !prediction.hasClaimed && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleClaim(
+                                  match.id,
+                                  prediction.id,
+                                  prediction.amountWon!
+                                );
+                              }}
+                              disabled={isClaiming}
+                              className="px-3 py-1.5 text-xs md:text-sm font-medium text-white bg-[#3fe0aa] rounded-lg hover:bg-[#3fe0aa]/80 transition-colors disabled:opacity-50"
+                            >
+                              {isClaiming ? "Claiming..." : "Claim Prize"}
+                            </button>
+                          )}
+                        {prediction.isWinner &&
+                          isUserPrediction &&
+                          prediction.hasClaimed && (
+                            <span className="text-[11px] md:text-xs font-medium text-[#0d0019]/50">
+                              Prize Claimed
+                            </span>
+                          )}
                       </td>
                     </tr>
                   );
@@ -728,9 +874,17 @@ export default function MatchPage() {
             </table>
           </div>
 
-          {predictions.length === 0 && (
+          {predictions.length === 0 && !isLoading && (
             <div className="text-center py-8 md:py-12 bg-white">
-              <p className="text-[#0d0019]/70 text-sm md:text-base">No predictions yet</p>
+              <p className="text-[#0d0019]/70 text-sm md:text-base">
+                No predictions yet
+              </p>
+            </div>
+          )}
+
+          {hasMore && (
+            <div ref={observerTarget} className="py-4 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f4395] mx-auto"></div>
             </div>
           )}
         </div>
@@ -746,8 +900,18 @@ export default function MatchPage() {
                 className="text-[#0d0019]/50 hover:text-[#0d0019] transition-colors"
               >
                 <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>

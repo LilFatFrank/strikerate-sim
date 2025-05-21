@@ -7,6 +7,7 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { USDC_MINT } from "@/lib/constants";
+import { updateStats } from "@/lib/stats";
 
 export async function POST(req: Request) {
   try {
@@ -146,6 +147,14 @@ export async function POST(req: Request) {
       lastUpdated: Timestamp.now(),
       lastActivity: "CREATE_PREDICTION",
     });
+
+    // Update global stats
+    await updateStats((current) => ({
+      predictions: {
+        total: current.predictions.total + 1,
+        totalAmount: current.predictions.totalAmount + 2
+      },
+    }));
 
     return NextResponse.json({
       id: predictionRef.id,

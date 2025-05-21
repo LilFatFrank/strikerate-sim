@@ -9,11 +9,17 @@ import {
   orderBy,
   onSnapshot,
   doc,
+  limit,
+  startAfter,
+  getDocs,
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getStatusBadge } from "@/lib/status";
+import { useRef } from "react";
+
+type MatchType = "T20" | "ODI";
 
 interface Prediction {
   id: string;
@@ -37,6 +43,10 @@ interface Match {
   team1: string;
   team2: string;
   status: "UPCOMING" | "LOCKED" | "COMPLETED";
+  matchType: MatchType;
+  tournament: string;
+  stadium: string;
+  matchTime: string;
   totalPool: number;
   totalPredictions: number;
   finalScore?: {
@@ -69,7 +79,10 @@ export default function UserProfilePage({
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<any>(null);
   const router = useRouter();
+  const PREDICTIONS_PER_PAGE = 5;
 
   useEffect(() => {
     // Get user data
@@ -80,61 +93,135 @@ export default function UserProfilePage({
       }
     });
 
-    // Get user's predictions
+    // Initial load of predictions
+    const loadInitialPredictions = async () => {
+      try {
+        const predictionsQuery = query(
+          collection(db, "predictions"),
+          where("userId", "==", wallet),
+          orderBy("createdAt", "desc"),
+          limit(PREDICTIONS_PER_PAGE)
+        );
+
+        const snapshot = await getDocs(predictionsQuery);
+        const predictionsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Prediction[];
+
+        setPredictions(predictionsData);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+
+        // Get match details for initial predictions
+        const matchIds = [...new Set(predictionsData.map((p) => p.matchId))];
+        matchIds.forEach((matchId) => {
+          const matchRef = doc(db, "matches", matchId);
+          onSnapshot(matchRef, (doc) => {
+            if (doc.exists()) {
+              setMatches((prev) => ({
+                ...prev,
+                [matchId]: { id: matchId, ...doc.data() } as Match,
+              }));
+            }
+          });
+        });
+      } catch (error) {
+        console.error("Error loading initial predictions:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialPredictions();
+
+    // Set up real-time listener for new predictions
     const predictionsQuery = query(
       collection(db, "predictions"),
       where("userId", "==", wallet),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
+      limit(PREDICTIONS_PER_PAGE)
     );
 
     const unsubscribePredictions = onSnapshot(predictionsQuery, (snapshot) => {
-      const predictionsData = snapshot.docs.map((doc) => ({
+      const newPredictions = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Prediction[];
-      setPredictions(predictionsData);
 
-      // Get match details for each prediction
-      const matchIds = [...new Set(predictionsData.map((p) => p.matchId))];
-      matchIds.forEach((matchId) => {
-        const matchRef = doc(db, "matches", matchId);
-        const unsubscribeMatch = onSnapshot(matchRef, (doc) => {
-          if (doc.exists()) {
-            setMatches((prev) => {
-              const newMatches = {
-                ...prev,
-                [matchId]: { id: matchId, ...doc.data() } as Match,
-              };
-              
-              // Sort predictions after we have the match data
-              const sortedPredictions = predictionsData.sort((a, b) => {
-                const matchA = newMatches[a.matchId];
-                const matchB = newMatches[b.matchId];
-                if (!matchA || !matchB) return 0;
-                
-                const statusOrder = {
-                  'UPCOMING': 0,
-                  'LOCKED': 1,
-                  'COMPLETED': 2
-                };
-                return statusOrder[matchA.status] - statusOrder[matchB.status];
-              });
-              
-              setPredictions(sortedPredictions);
-              return newMatches;
-            });
-          }
-        });
-        return unsubscribeMatch;
-      });
+      // Only update if we're on the first page
+      if (!lastDoc) {
+        setPredictions(newPredictions);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+        setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+      }
     });
 
-    setIsLoading(false);
     return () => {
       unsubscribeUser();
       unsubscribePredictions();
     };
   }, [wallet]);
+
+  const loadMore = async () => {
+    if (!hasMore || !lastDoc) return;
+
+    try {
+      const nextQuery = query(
+        collection(db, "predictions"),
+        where("userId", "==", wallet),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDoc),
+        limit(PREDICTIONS_PER_PAGE)
+      );
+
+      const snapshot = await getDocs(nextQuery);
+      const newPredictions = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Prediction[];
+
+      setPredictions(prev => [...prev, ...newPredictions]);
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === PREDICTIONS_PER_PAGE);
+
+      // Get match details for new predictions
+      const matchIds = [...new Set(newPredictions.map((p) => p.matchId))];
+      matchIds.forEach((matchId) => {
+        const matchRef = doc(db, "matches", matchId);
+        onSnapshot(matchRef, (doc) => {
+          if (doc.exists()) {
+            setMatches((prev) => ({
+              ...prev,
+              [matchId]: { id: matchId, ...doc.data() } as Match,
+            }));
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error loading more predictions:", error);
+    }
+  };
+
+  // Add intersection observer for infinite scroll
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, lastDoc]);
 
   const copyWalletAddress = () => {
     if (!user) return;
@@ -384,6 +471,11 @@ export default function UserProfilePage({
           {predictions.length === 0 && (
             <div className="text-center py-8 md:py-12 bg-white">
               <p className="text-[#0d0019]/70 text-sm md:text-base">No predictions yet</p>
+            </div>
+          )}
+          {hasMore && (
+            <div ref={observerTarget} className="py-4 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4f4395] mx-auto"></div>
             </div>
           )}
         </div>

@@ -27,19 +27,16 @@ function calculateInningsScore(predicted: Innings, actual: Innings): number {
   // Protect against division by zero
   const safeActualRuns = actual.runs === 0 ? 1 : actual.runs;
 
-  // Run score (max 56 points)
+  // Run score (max 40 points - 80% of 50)
   const runError = Math.min(Math.abs(predicted.runs - actual.runs), safeActualRuns);
-  const runScore = Math.max(0, 59.5 * (1 - runError / safeActualRuns));
+  const runScore = Math.max(0, 40 * (1 - runError / safeActualRuns));
 
-  // Wicket score (max 14 points), adjust penalty for range
+  // Wicket score (max 10 points - 20% of 50)
   const wicketError = Math.abs(predicted.wickets - actual.wickets);
-  const wicketScore = Math.max(0, 10.5 - 1.5 * wicketError);
+  const wicketScore = Math.max(0, 10 - 2 * wicketError);
 
-  // Total raw innings score (max 70) → Normalize to 50
-  const inningsRaw = runScore + wicketScore;
-  const normalized = (inningsRaw / 70) * 50;
-
-  return Number(normalized.toFixed(3));
+  // Total raw innings score (max 50)
+  return Number((runScore + wicketScore).toFixed(3));
 }
 
 /**

@@ -18,7 +18,6 @@ type StatsUpdate = {
   };
   users?: {
     total?: number;
-    active?: number;
   };
   winnings?: {
     total?: number;

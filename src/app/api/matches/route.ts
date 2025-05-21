@@ -6,9 +6,15 @@ import * as nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { updateStats } from '@/lib/stats';
 
+type MatchType = 'T20' | 'ODI';
+
 interface CreateMatchRequest {
   team1: string;
   team2: string;
+  matchType: MatchType;
+  tournament: string;
+  stadium: string;
+  matchTime: string;
   walletAddress: string;
   signature: string;
   message: string;
@@ -17,7 +23,18 @@ interface CreateMatchRequest {
 
 export async function POST(req: Request) {
   try {
-    const { team1, team2, walletAddress, signature, message, nonce } = await req.json() as CreateMatchRequest;
+    const { 
+      team1, 
+      team2, 
+      matchType,
+      tournament,
+      stadium,
+      matchTime,
+      walletAddress, 
+      signature, 
+      message, 
+      nonce 
+    } = await req.json() as CreateMatchRequest;
 
     // Verify admin wallet
     if (walletAddress !== process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS) {
@@ -74,9 +91,9 @@ export async function POST(req: Request) {
     });
 
     // Validate input
-    if (!team1 || !team2) {
+    if (!team1 || !team2 || !matchType || !tournament || !stadium || !matchTime) {
       return NextResponse.json(
-        { error: 'Both team names are required' },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
@@ -89,6 +106,10 @@ export async function POST(req: Request) {
       id: matchRef.id,
       team1,
       team2,
+      matchType,
+      tournament,
+      stadium,
+      matchTime,
       status: 'UPCOMING' as const,
       totalPool: 0,
       totalPredictions: 0,
