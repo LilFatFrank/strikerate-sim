@@ -51,20 +51,20 @@ export const metadata: Metadata = {
   openGraph: {
     title: "strikerate",
     description: "win with precision",
-    url: "https://strikerate-sim.vercel.app/",
+    url: "https://strikerate.app/",
     siteName: "strikerate",
     images: [
       {
-        url: "https://strikerate-sim.vercel.app/assets/strikerate-logo.png",
+        url: "https://strikerate.app/assets/strikerate-logo.png",
         alt: "strikerate - win with precision",
       },
     ],
     locale: "en_US",
     type: "website",
   },
-  metadataBase: new URL("https://strikerate-sim.vercel.app"),
+  metadataBase: new URL("https://strikerate.app"),
   alternates: {
-    canonical: "https://strikerate-sim.vercel.app",
+    canonical: "https://strikerate.app",
   },
 };
 
