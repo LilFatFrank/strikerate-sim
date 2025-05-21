@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getStatusBadge } from "@/lib/status";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Suspense } from "react";
 
 type MatchStatus = "UPCOMING" | "LOCKED" | "COMPLETED";
 type MatchType = "T20" | "ODI";
@@ -49,7 +50,7 @@ interface MatchSection {
   isLoading: boolean;
 }
 
-export default function Home() {
+function HomeContent() {
   const { push } = useRouter();
   const { user, getSignature } = useAuth();
   const searchParams = useSearchParams();
@@ -621,5 +622,20 @@ export default function Home() {
 
       <MatchTable />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4f4395] mx-auto"></div>
+          <p className="mt-4 text-[#0d0019]/70">Loading...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
