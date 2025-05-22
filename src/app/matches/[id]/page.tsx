@@ -74,24 +74,24 @@ const formatMatchTime = (matchTime: string) => {
   const date = new Date(matchTime);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  
+
   const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   };
 
   if (isToday) {
-    return date.toLocaleTimeString('en-US', timeOptions);
+    return date.toLocaleTimeString("en-US", timeOptions);
   }
 
   // Format date and time separately to avoid the 'at' separator
-  const dateStr = date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short'
+  const dateStr = date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
   });
-  const timeStr = date.toLocaleTimeString('en-US', timeOptions);
-  
+  const timeStr = date.toLocaleTimeString("en-US", timeOptions);
+
   return `${dateStr} ${timeStr}`;
 };
 
@@ -522,7 +522,8 @@ export default function MatchPage() {
               {match?.stadium || match?.matchTime ? (
                 <div className="mb-2">
                   <p className="md:text-sm text-xs text-white/80 font-medium">
-                    {match?.stadium}, {match?.matchTime ? formatMatchTime(match.matchTime) : ''}
+                    {match?.stadium},{" "}
+                    {match?.matchTime ? formatMatchTime(match.matchTime) : ""}
                   </p>
                   {match?.status === "UPCOMING" ? (
                     <p className="md:text-sm text-xs text-white/80 font-medium">
@@ -590,149 +591,139 @@ export default function MatchPage() {
           {match.status === "UPCOMING" && user && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 md:p-6">
-                {predictions.some((p) => p.userId === user.walletAddress) ? (
-                  <div className="text-center py-4">
-                    <p className="text-[#0d0019]/70 text-sm md:text-base">
-                      You have already made a prediction for this match
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <form
-                      onSubmit={handlePredictionSubmit}
-                      className="space-y-6 md:space-y-10 flex flex-col w-full h-full justify-between items-start"
-                    >
-                      <div className="w-full h-full space-y-3">
-                        <h2 className="text-lg md:text-xl font-semibold text-[#0d0019]">
-                          Make a Prediction
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-[#0d0019]/70 mb-2">
-                              {match.team1}
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={3}
-                                placeholder="Score"
-                                value={predictionForm.team1Score}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "" || /^\d{1,3}$/.test(value)) {
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team1Score: value,
-                                    }));
-                                  }
-                                }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
-                              />
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={2}
-                                placeholder="Wickets"
-                                value={predictionForm.team1Wickets}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "") {
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team1Wickets: value,
-                                    }));
-                                  } else if (/^\d{1,2}$/.test(value)) {
-                                    const numValue = parseInt(value);
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team1Wickets:
-                                        numValue > 10 ? "10" : value,
-                                    }));
-                                  }
-                                }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
-                              />
-                            </div>
+                <>
+                  <form
+                    onSubmit={handlePredictionSubmit}
+                    className="space-y-6 md:space-y-10 flex flex-col w-full h-full justify-between items-start"
+                  >
+                    <div className="w-full h-full space-y-3">
+                      <h2 className="text-lg md:text-xl font-semibold text-[#0d0019]">
+                        Make a Prediction
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-[#0d0019]/70 mb-2">
+                            {match.team1}
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={3}
+                              placeholder="Score"
+                              value={predictionForm.team1Score}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "" || /^\d{1,3}$/.test(value)) {
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team1Score: value,
+                                  }));
+                                }
+                              }}
+                              className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={2}
+                              placeholder="Wickets"
+                              value={predictionForm.team1Wickets}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "") {
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team1Wickets: value,
+                                  }));
+                                } else if (/^\d{1,2}$/.test(value)) {
+                                  const numValue = parseInt(value);
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team1Wickets: numValue > 10 ? "10" : value,
+                                  }));
+                                }
+                              }}
+                              className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
+                            />
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-[#0d0019]/70 mb-2">
-                              {match.team2}
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={3}
-                                placeholder="Score"
-                                value={predictionForm.team2Score}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "" || /^\d{1,3}$/.test(value)) {
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team2Score: value,
-                                    }));
-                                  }
-                                }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
-                              />
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={2}
-                                placeholder="Wickets"
-                                value={predictionForm.team2Wickets}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === "") {
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team2Wickets: value,
-                                    }));
-                                  } else if (/^\d{1,2}$/.test(value)) {
-                                    const numValue = parseInt(value);
-                                    setPredictionForm((prev) => ({
-                                      ...prev,
-                                      team2Wickets:
-                                        numValue > 10 ? "10" : value,
-                                    }));
-                                  }
-                                }}
-                                className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
-                              />
-                            </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#0d0019]/70 mb-2">
+                            {match.team2}
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={3}
+                              placeholder="Score"
+                              value={predictionForm.team2Score}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "" || /^\d{1,3}$/.test(value)) {
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team2Score: value,
+                                  }));
+                                }
+                              }}
+                              className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={2}
+                              placeholder="Wickets"
+                              value={predictionForm.team2Wickets}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "") {
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team2Wickets: value,
+                                  }));
+                                } else if (/^\d{1,2}$/.test(value)) {
+                                  const numValue = parseInt(value);
+                                  setPredictionForm((prev) => ({
+                                    ...prev,
+                                    team2Wickets: numValue > 10 ? "10" : value,
+                                  }));
+                                }
+                              }}
+                              className="block w-full remove-arrow rounded-lg shadow-sm outline-none border-none py-2 px-4 bg-gray-50"
+                            />
                           </div>
                         </div>
                       </div>
-                      <button
-                        type="submit"
-                        disabled={isMakingPrediction}
-                        className="cursor-pointer relative w-full bg-[#4f4395] text-white px-4 py-3 rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
-                      >
-                        {isMakingPrediction ? (
-                          "Making Prediction..."
-                        ) : (
-                          <>
-                            <span className="font-bold">Predict</span>
-                            <span className="absolute right-4 flex items-center gap-1 top-1/2 -translate-y-1/2">
-                              2{" "}
-                              <img
-                                src={"/assets/usdc-coin.svg"}
-                                alt="usdc"
-                                className="w-4 h-4 md:w-5 md:h-5"
-                              />
-                            </span>
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  </>
-                )}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isMakingPrediction}
+                      className="cursor-pointer relative w-full bg-[#4f4395] text-white px-4 py-3 rounded-lg hover:bg-[#433a7d] transition-colors disabled:opacity-50"
+                    >
+                      {isMakingPrediction ? (
+                        "Making Prediction..."
+                      ) : (
+                        <>
+                          <span className="font-bold">Predict</span>
+                          <span className="absolute right-4 flex items-center gap-1 top-1/2 -translate-y-1/2">
+                            2{" "}
+                            <img
+                              src={"/assets/usdc-coin.svg"}
+                              alt="usdc"
+                              className="w-4 h-4 md:w-5 md:h-5"
+                            />
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
               </div>
             </div>
           )}

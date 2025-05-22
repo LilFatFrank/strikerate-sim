@@ -139,8 +139,7 @@ export default function HowItWorksPage() {
                     actual score
                   </li>
                   <li>
-                    The maximum error is capped at the actual runs scored to keep
-                    scoring fair
+                    Predictions are scored relative to the actual runs scored, ensuring fair scoring regardless of the match's total score
                   </li>
                 </ul>
               </div>
@@ -153,9 +152,9 @@ export default function HowItWorksPage() {
                   <li>
                     You get 10 points for predicting the exact number of wickets
                   </li>
-                  <li>For each wicket you're off by, you lose 1 point</li>
+                  <li>For each wicket you're off by, you lose 2 points</li>
                   <li>
-                    This means being off by 10 or more wickets gives you 0 points
+                    This means being off by 5 or more wickets gives you 0 points
                     for wickets
                   </li>
                 </ul>
