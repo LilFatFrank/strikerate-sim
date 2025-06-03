@@ -6,15 +6,8 @@ import * as nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { calculateMatchScore } from '@/lib/scoring';
 import { updateStats } from '@/lib/stats';
-
-interface Prediction {
-  team1Score: number;
-  team1Wickets: number;
-  team2Score: number;
-  team2Wickets: number;
-  userId: string;
-  amount: number;
-}
+import { Prediction } from '@/lib/types/prediction';
+import { MarketType } from '@/lib/types';
 
 export async function POST(req: Request) {
   try {
@@ -24,34 +17,15 @@ export async function POST(req: Request) {
       signature, 
       message, 
       nonce,
-      team1Score,
-      team1Wickets,
-      team2Score,
-      team2Wickets
+      payload
     } = await req.json();
+
+    console.log(payload);
 
     // Validate required fields
     if (!matchId || !walletAddress || !signature || !message || !nonce) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // Validate scores and wickets
-    const scores = [team1Score, team2Score].map(Number);
-    const wickets = [team1Wickets, team2Wickets].map(Number);
-
-    if (scores.some(isNaN) || wickets.some(isNaN)) {
-      return NextResponse.json(
-        { error: 'Invalid scores or wickets' },
-        { status: 400 }
-      );
-    }
-
-    if (wickets.some(w => w < 0 || w > 10)) {
-      return NextResponse.json(
-        { error: 'Wickets must be between 0 and 10' },
         { status: 400 }
       );
     }
@@ -112,124 +86,183 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get all predictions for this match
-    const predictionsSnapshot = await adminDb
-      .collection('predictions')
+    // Get all markets for this match
+    const marketsSnapshot = await adminDb
+      .collection('markets')
       .where('matchId', '==', matchId)
       .get();
 
-    if (predictionsSnapshot.empty) {
+    if (marketsSnapshot.empty) {
       return NextResponse.json(
-        { error: 'No predictions found for this match' },
-        { status: 400 }
+        { error: 'No markets found for this match' },
+        { status: 404 }
       );
     }
 
     const finalScore = {
-      team1Score: Number(team1Score),
-      team1Wickets: Number(team1Wickets),
-      team2Score: Number(team2Score),
-      team2Wickets: Number(team2Wickets)
+      team1Score: Number(payload.team1Score),
+      team1Wickets: Number(payload.team1Wickets),
+      team2Score: Number(payload.team2Score),
+      team2Wickets: Number(payload.team2Wickets)
     };
 
-    // Calculate scores for all predictions
-    const batch = adminDb.batch();
+    // Process each market
     const userPoints: { [userId: string]: number } = {};
-    const predictionsWithScores: { 
-      doc: FirebaseFirestore.QueryDocumentSnapshot;
-      score: number;
-      prediction: Prediction;
-    }[] = [];
+    let totalWinners = 0;
+    let totalPrizePool = 0;
+    const marketResults: { marketId: string; status: 'success' | 'error'; error?: string }[] = [];
 
-    for (const predictionDoc of predictionsSnapshot.docs) {
-      const prediction = predictionDoc.data() as Prediction;
-      
-      // Calculate score
-      const score = calculateMatchScore(prediction, finalScore);
-      predictionsWithScores.push({ doc: predictionDoc, score, prediction });
-      
-      // Track user points
-      const userId = prediction.userId;
-      userPoints[userId] = (userPoints[userId] || 0) + score;
-    }
+    for (const marketDoc of marketsSnapshot.docs) {
+      try {
+        const market = marketDoc.data();
+        const marketId = marketDoc.id;
+        console.log(marketId);
 
-    // Find highest score
-    const highestScore = Math.max(...predictionsWithScores.map(p => p.score));
-    
-    // Find winners (predictions with highest score)
-    const winners = predictionsWithScores.filter(p => p.score === highestScore);
-    
-    // Calculate prize pool (90% of total pool)
-    const totalPool = match.totalPool;
-    const prizePool = totalPool * 0.9;
-    const prizePerWinner = prizePool / winners.length;
+        // Get predictions for this market
+        const predictionsSnapshot = await adminDb
+          .collection('predictions')
+          .where('marketId', '==', marketId)
+          .get();
 
-    // Update predictions with scores and prizes
-    for (const { doc, score, prediction } of predictionsWithScores) {
-      const isWinner = score === highestScore;
-      const amountWon = isWinner ? prizePerWinner : 0;
+        console.log(predictionsSnapshot);
 
-      batch.update(doc.ref, {
-        pointsEarned: score,
-        isWinner,
-        amountWon,
-        hasClaimed: false,
-        updatedAt: Timestamp.now()
-      });
+        if (predictionsSnapshot.empty) {
+          marketResults.push({ marketId, status: 'success' });
+          continue;
+        }
 
-      // If winner, update user's total wins and amount won
-      if (isWinner) {
-        const userRef = adminDb.collection('users').doc(prediction.userId);
-        batch.update(userRef, {
-          totalWins: FieldValue.increment(1),
-          totalAmountWon: FieldValue.increment(amountWon),
-          updatedAt: Timestamp.now()
+        const predictionsWithScores: { 
+          doc: FirebaseFirestore.QueryDocumentSnapshot;
+          score: number;
+          prediction: Prediction;
+        }[] = [];
+
+        // Calculate scores based on market type
+        if (market.marketType === MarketType.SCORE) {
+          for (const predictionDoc of predictionsSnapshot.docs) {
+            const prediction = predictionDoc.data() as Prediction;
+            const score = calculateMatchScore(prediction, finalScore);
+            predictionsWithScores.push({ doc: predictionDoc, score, prediction });
+            
+            // Track user points
+            const userId = prediction.userId;
+            userPoints[userId] = (userPoints[userId] || 0) + score;
+          }
+
+          // Find highest score
+          const highestScore = Math.max(...predictionsWithScores.map(p => p.score));
+          
+          // Find winners (predictions with highest score)
+          const winners = predictionsWithScores.filter(p => p.score === highestScore);
+          
+          // Calculate prize pool (90% of market's total pool)
+          const prizePool = market.totalPool * 0.9;
+          const prizePerWinner = prizePool / winners.length;
+
+          totalWinners += winners.length;
+          totalPrizePool += prizePool;
+
+          // Process predictions in smaller batches
+          const BATCH_SIZE = 400; // Firestore batch limit is 500
+          for (let i = 0; i < predictionsWithScores.length; i += BATCH_SIZE) {
+            const batch = adminDb.batch();
+            const chunk = predictionsWithScores.slice(i, i + BATCH_SIZE);
+
+            for (const { doc, score, prediction } of chunk) {
+              const isWinner = score === highestScore;
+              const amountWon = isWinner ? prizePerWinner : 0;
+
+              batch.update(doc.ref, {
+                pointsEarned: score,
+                isWinner,
+                amountWon,
+                hasClaimed: false,
+                updatedAt: Timestamp.now()
+              });
+
+              // If winner, update user's total wins and amount won
+              if (isWinner) {
+                const userRef = adminDb.collection('users').doc(prediction.userId);
+                batch.update(userRef, {
+                  totalWins: FieldValue.increment(1),
+                  totalAmountWon: FieldValue.increment(amountWon),
+                  updatedAt: Timestamp.now()
+                });
+              }
+            }
+
+            await batch.commit();
+          }
+        }
+        // Add other market types here when needed
+
+        marketResults.push({ marketId, status: 'success' });
+      } catch (error) {
+        console.error(`Error processing market ${marketDoc.id}:`, error);
+        marketResults.push({ 
+          marketId: marketDoc.id, 
+          status: 'error', 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
 
     // Update match status and final score
-    batch.update(matchRef, {
+    const finalBatch = adminDb.batch();
+    finalBatch.update(matchRef, {
       status: 'COMPLETED',
       finalScore,
       updatedAt: Timestamp.now()
     });
 
-    // Update user total points
-    for (const [userId, points] of Object.entries(userPoints)) {
-      const userRef = adminDb.collection('users').doc(userId);
-      batch.update(userRef, {
-        totalPoints: FieldValue.increment(points),
-        updatedAt: Timestamp.now()
-      });
+    // Update user total points in smaller batches
+    const userIds = Object.keys(userPoints);
+    for (let i = 0; i < userIds.length; i += 400) {
+      const batch = adminDb.batch();
+      const chunk = userIds.slice(i, i + 400);
+
+      for (const userId of chunk) {
+        const userRef = adminDb.collection('users').doc(userId);
+        batch.update(userRef, {
+          totalPoints: FieldValue.increment(userPoints[userId]),
+          updatedAt: Timestamp.now()
+        });
+      }
+
+      await batch.commit();
     }
 
     // Increment nonce
-    batch.update(nonceRef, {
+    finalBatch.update(nonceRef, {
       nonce: nonce + 1,
       lastUpdated: Timestamp.now(),
       lastActivity: 'COMPLETE_MATCH'
     });
 
     // Update stats
-    await updateStats((current) => ({
-      matches: {
-        live: current.matches.live - 1,
-        completed: current.matches.completed + 1
-      },
-      winnings: {
-        pendingClaims: current.winnings.pendingClaims + prizePool
-      }
-    }));
+    await updateStats((current) => {
+      const newLive = Math.max(0, current.matches.live - 1);
+      return {
+        matches: {
+          ...current.matches,
+          live: newLive,
+          completed: current.matches.completed + 1,
+        },
+        winnings: {
+          ...current.winnings,
+          pendingClaims: current.winnings.pendingClaims + totalPrizePool
+        }
+      };
+    });
 
-    // Commit all updates
-    await batch.commit();
+    // Commit final updates
+    await finalBatch.commit();
 
     return NextResponse.json({
       message: 'Match completed successfully',
-      winners: winners.length,
-      prizePerWinner,
-      highestScore
+      totalWinners,
+      totalPrizePool,
+      marketResults
     });
 
   } catch (error) {

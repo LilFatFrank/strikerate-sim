@@ -22,12 +22,21 @@ export async function POST(req: Request) {
   try {
     const { 
       matchId,
+      marketId,
       predictionId,
       walletAddress,
       signature,
       message,
       nonce
     } = await req.json();
+
+    // Validate required fields
+    if (!matchId || !marketId || !predictionId || !walletAddress || !signature || !message || !nonce) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
     // Get prediction
     const predictionRef = adminDb.collection('predictions').doc(predictionId);
@@ -45,6 +54,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'Prediction data not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify prediction belongs to the specified market
+    if (prediction.marketId !== marketId) {
+      return NextResponse.json(
+        { error: 'Prediction does not belong to the specified market' },
+        { status: 400 }
       );
     }
 
@@ -103,6 +120,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // Verify market belongs to this match
+    const marketRef = adminDb.collection('markets').doc(marketId);
+    const marketDoc = await marketRef.get();
+
+    if (!marketDoc.exists || marketDoc.data()?.matchId !== matchId) {
+      return NextResponse.json(
+        { error: 'Market does not belong to this match' },
+        { status: 400 }
+      );
+    }
+
     // Initialize Solana connection
     const connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com');
     
@@ -150,8 +178,8 @@ export async function POST(req: Request) {
         mint,
         userTokenAccount,
         adminWallet,
-        prediction.amountWon * 1e6, // Convert to USDC decimals
-        6 // USDC decimals
+        prediction.amountWon * 1e6,
+        6
       )
     );
 
@@ -174,27 +202,31 @@ export async function POST(req: Request) {
       throw new Error('Transaction failed to confirm');
     }
 
-    // Update prediction
-    await predictionRef.update({
+    // Update prediction and nonce in a batch
+    const batch = adminDb.batch();
+    
+    batch.update(predictionRef, {
       hasClaimed: true,
       updatedAt: Timestamp.now()
     });
 
+    batch.update(nonceRef, {
+      nonce: nonce + 1,
+      lastUpdated: Timestamp.now(),
+      lastActivity: 'CLAIM_PRIZE'
+    });
+
+    await batch.commit();
+
     // Update stats
     await updateStats((current) => ({
       winnings: {
+        ...current.winnings,
         total: current.winnings.total + prediction.amountWon,
         totalClaims: current.winnings.totalClaims + 1,
         pendingClaims: current.winnings.pendingClaims - prediction.amountWon
       }
     }));
-
-    // Increment nonce
-    await nonceRef.update({
-      nonce: nonce + 1,
-      lastUpdated: Timestamp.now(),
-      lastActivity: 'CLAIM_PRIZE'
-    });
 
     return NextResponse.json({
       message: 'Prize claimed successfully',

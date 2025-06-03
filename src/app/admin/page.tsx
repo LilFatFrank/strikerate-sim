@@ -11,6 +11,7 @@ interface DashboardStats {
     upcoming: number;
     live: number;
     completed: number;
+    abandoned: number;
   };
   predictions: {
     total: number;
@@ -33,7 +34,8 @@ export default function AdminDashboard() {
       total: 0,
       upcoming: 0,
       live: 0,
-      completed: 0
+      completed: 0,
+      abandoned: 0
     },
     predictions: {
       total: 0,
@@ -89,6 +91,10 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center">
               <span className="text-sm md:text-base text-[#0d0019]/70">Completed</span>
               <span className="text-sm md:text-base text-[#3fe0aa] font-medium">{stats.matches.completed}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm md:text-base text-[#0d0019]/70">Abandoned</span>
+              <span className="text-sm md:text-base text-[#e6e7e8] font-medium">{stats.matches.abandoned}</span>
             </div>
           </div>
         </div>

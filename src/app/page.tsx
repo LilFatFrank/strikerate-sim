@@ -18,6 +18,7 @@ import { getStatusBadge } from "@/lib/status";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Suspense } from "react";
+import { MatchSport } from "@/lib/types";
 
 type MatchStatus = "UPCOMING" | "LOCKED" | "COMPLETED";
 type MatchType = "T20" | "ODI";
@@ -258,6 +259,7 @@ function HomeContent() {
           stadium: formData.stadium.trim(),
           matchTime: formData.matchTime.trim(),
           walletAddress: user.walletAddress,
+          matchSport: MatchSport.CRICKET,
           signature,
           message,
           nonce,

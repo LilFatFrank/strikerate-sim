@@ -14,7 +14,6 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
-import { Timestamp } from "firebase/firestore";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -28,46 +27,9 @@ import { USDC_MINT } from "@/lib/constants";
 import { CompleteMatchForm } from "@/components/admin/CompleteMatchForm";
 import { toast } from "sonner";
 import { LockMatchButton } from "@/components/admin/LockMatchButton";
-
-type MatchType = "T20" | "ODI";
-
-interface Match {
-  id: string;
-  team1: string;
-  team2: string;
-  status: "UPCOMING" | "LOCKED" | "COMPLETED";
-  matchType: MatchType;
-  tournament: string;
-  stadium: string;
-  matchTime: string;
-  totalPool: number;
-  totalPredictions: number;
-  finalScore?: {
-    team1Score: number;
-    team1Wickets: number;
-    team2Score: number;
-    team2Wickets: number;
-  };
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-interface Prediction {
-  id: string;
-  matchId: string;
-  userId: string;
-  team1Score: number;
-  team1Wickets: number;
-  team2Score: number;
-  team2Wickets: number;
-  amount: number;
-  isWinner: boolean;
-  amountWon?: number;
-  hasClaimed: boolean;
-  pointsEarned?: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
+import { Prediction } from '@/lib/types/prediction';
+import { Match } from '@/lib/types/match';
+import { MarketType } from "@/lib/types";
 
 // Add this helper function before the MatchPage component
 const formatMatchTime = (matchTime: string) => {
@@ -109,6 +71,7 @@ export default function MatchPage() {
   const [isClaiming, setIsClaiming] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<any>(null);
+  const [markets, setMarkets] = useState<Array<{ id: string; type: string }>>([]);
   const PREDICTIONS_PER_PAGE = 5;
   const [predictionForm, setPredictionForm] = useState({
     team1Score: "",
@@ -125,6 +88,26 @@ export default function MatchPage() {
       }
       setIsLoading(false);
     });
+
+    const getMarkets = async () => {
+      try {
+        const marketsRef = collection(db, "markets");
+        const q = query(
+          marketsRef,
+          where("matchId", "==", matchId)
+        );
+        const snapshot = await getDocs(q);
+        const marketsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          type: doc.data().marketType
+        }));
+        setMarkets(marketsData);
+      } catch (error) {
+        console.error('Error fetching markets:', error);
+      }
+    };
+
+    getMarkets();
 
     // Initial load of predictions
     const loadInitialPredictions = async () => {
@@ -236,6 +219,13 @@ export default function MatchPage() {
     )
       return;
 
+    // Find SCORE market
+    const scoreMarket = markets.find(m => m.type === MarketType.SCORE);
+    if (!scoreMarket) {
+      toast.error('Score market not found');
+      return;
+    }
+
     setIsMakingPrediction(true);
     try {
       // Get signature
@@ -243,6 +233,7 @@ export default function MatchPage() {
         "CREATE_PREDICTION",
         {
           matchId: match.id,
+          marketId: scoreMarket.id,
           team1Score: predictionForm.team1Score,
           team1Wickets: predictionForm.team1Wickets,
           team2Score: predictionForm.team2Score,
@@ -258,10 +249,18 @@ export default function MatchPage() {
         },
         body: JSON.stringify({
           matchId: match.id,
+          marketId: scoreMarket.id,
           walletAddress: user.walletAddress,
+          amount: 2,
           signature,
           message,
           nonce,
+          payload: {
+            team1Score: Number(predictionForm.team1Score),
+            team1Wickets: Number(predictionForm.team1Wickets),
+            team2Score: Number(predictionForm.team2Score),
+            team2Wickets: Number(predictionForm.team2Wickets),
+          }
         }),
       });
 
@@ -354,11 +353,16 @@ export default function MatchPage() {
             },
             body: JSON.stringify({
               matchId: match.id,
+              marketId: scoreMarket.id,
+              marketType: MarketType.SCORE,
+              amount,
               walletAddress: user.walletAddress,
-              team1Score: predictionForm.team1Score,
-              team1Wickets: predictionForm.team1Wickets,
-              team2Score: predictionForm.team2Score,
-              team2Wickets: predictionForm.team2Wickets,
+              payload: {
+                team1Score: Number(predictionForm.team1Score),
+                team1Wickets: Number(predictionForm.team1Wickets),
+                team2Score: Number(predictionForm.team2Score),
+                team2Wickets: Number(predictionForm.team2Wickets),
+              },
               paymentSignature: tx,
             }),
           });
@@ -405,12 +409,18 @@ export default function MatchPage() {
     if (!user?.walletAddress) return;
 
     setIsClaiming(true);
+    const scoreMarket = markets.find(m => m.type === MarketType.SCORE);
+    if (!scoreMarket) {
+      toast.error('Score market not found');
+      return;
+    }
     try {
       // Get signature
       const { signature, message, nonce } = await getSignature("CLAIM_PRIZE", {
         matchId,
         predictionId,
         amount: amountWon,
+        marketId: scoreMarket.id
       });
 
       // Send claim request
@@ -422,6 +432,7 @@ export default function MatchPage() {
         body: JSON.stringify({
           matchId,
           predictionId,
+          marketId: scoreMarket.id,
           walletAddress: user.walletAddress,
           signature,
           message,
@@ -782,12 +793,12 @@ export default function MatchPage() {
                         ) : (
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
-                              {match.team1}: {prediction.team1Score}/
-                              {prediction.team1Wickets}
+                              {match.team1}: {prediction.payload?.team1Score}/
+                              {prediction.payload?.team1Wickets}
                             </span>
                             <span className="text-[11px] md:text-[12px] text-[#0d0019] leading-tight">
-                              {match.team2}: {prediction.team2Score}/
-                              {prediction.team2Wickets}
+                              {match.team2}: {prediction.payload?.team2Score}/
+                              {prediction.payload?.team2Wickets}
                             </span>
                           </div>
                         )}

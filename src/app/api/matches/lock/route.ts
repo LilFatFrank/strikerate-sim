@@ -70,6 +70,7 @@ export async function POST(req: Request) {
 
     await updateStats((current) => ({
       matches: {
+        ...current.matches,
         upcoming: current.matches.upcoming - 1,
         live: current.matches.live + 1,
       },

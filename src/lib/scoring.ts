@@ -1,13 +1,8 @@
+import { Prediction } from '@/lib/types/prediction';
+
 interface Innings {
   runs: number;
   wickets: number;
-}
-
-interface Prediction {
-  team1Score: number;
-  team1Wickets: number;
-  team2Score: number;
-  team2Wickets: number;
 }
 
 interface FinalScore {
@@ -46,15 +41,19 @@ function calculateInningsScore(predicted: Innings, actual: Innings): number {
  * @returns Total score out of 100
  */
 export function calculateMatchScore(prediction: Prediction, finalScore: FinalScore): number {
+  if (!prediction.payload) {
+    throw new Error('Prediction payload is required for scoring');
+  }
+
   // Calculate home innings score
   const homeScore = calculateInningsScore(
-    { runs: prediction.team1Score, wickets: prediction.team1Wickets },
+    { runs: prediction.payload.team1Score, wickets: prediction.payload.team1Wickets },
     { runs: finalScore.team1Score, wickets: finalScore.team1Wickets }
   );
 
   // Calculate away innings score
   const awayScore = calculateInningsScore(
-    { runs: prediction.team2Score, wickets: prediction.team2Wickets },
+    { runs: prediction.payload.team2Score, wickets: prediction.payload.team2Wickets },
     { runs: finalScore.team2Score, wickets: finalScore.team2Wickets }
   );
 

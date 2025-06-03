@@ -25,6 +25,7 @@ export async function POST(req: Request) {
       // Update global stats
       await updateStats((current) => ({
         users: {
+          ...current.users,
           total: current.users.total + 1
         }
       }));

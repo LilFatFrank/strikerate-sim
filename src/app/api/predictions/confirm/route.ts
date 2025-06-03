@@ -14,11 +14,11 @@ export async function POST(req: Request) {
     const {
       matchId,
       walletAddress,
-      team1Score,
-      team1Wickets,
-      team2Score,
-      team2Wickets,
+      payload,
       paymentSignature,
+      amount,
+      marketId,
+      marketType
     } = await req.json();
 
     // Verify USDC payment
@@ -109,13 +109,13 @@ export async function POST(req: Request) {
     // Create prediction
     const predictionRef = adminDb.collection("predictions").doc();
     await predictionRef.set({
+      id: predictionRef.id,
       matchId,
       userId: walletAddress,
-      team1Score: Number(team1Score),
-      team1Wickets: Number(team1Wickets),
-      team2Score: Number(team2Score),
-      team2Wickets: Number(team2Wickets),
-      amount: 2,
+      marketId: marketId,
+      marketType: marketType,
+      payload,
+      amount: Number(amount),
       isWinner: false,
       hasClaimed: false,
       createdAt: Timestamp.now(),
@@ -125,10 +125,20 @@ export async function POST(req: Request) {
     // Update match
     const matchRef = adminDb.collection("matches").doc(matchId);
     await matchRef.update({
-      totalPool: FieldValue.increment(2),
+      totalPool: FieldValue.increment(Number(amount)),
       totalPredictions: FieldValue.increment(1),
       updatedAt: Timestamp.now(),
     });
+
+    // Update market if exists
+    if (marketId) {
+      const marketRef = adminDb.collection("markets").doc(marketId);
+      await marketRef.update({
+        totalPool: FieldValue.increment(Number(amount)),
+        totalPredictions: FieldValue.increment(1),
+        updatedAt: Timestamp.now(),
+      });
+    }
 
     // Update user
     const userRef = adminDb.collection("users").doc(walletAddress);
@@ -151,8 +161,9 @@ export async function POST(req: Request) {
     // Update global stats
     await updateStats((current) => ({
       predictions: {
+        ...current.predictions,
         total: current.predictions.total + 1,
-        totalAmount: current.predictions.totalAmount + 2
+        totalAmount: current.predictions.totalAmount + Number(amount)
       },
     }));
 

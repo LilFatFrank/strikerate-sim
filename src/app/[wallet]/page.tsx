@@ -18,46 +18,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getStatusBadge } from "@/lib/status";
 import { useRef } from "react";
+import { Prediction } from '@/lib/types/prediction';
+import { Match } from '@/lib/types/match';
 
-type MatchType = "T20" | "ODI";
-
-interface Prediction {
-  id: string;
-  matchId: string;
-  userId: string;
-  team1Score: number;
-  team1Wickets: number;
-  team2Score: number;
-  team2Wickets: number;
-  amount: number;
-  isWinner: boolean;
-  amountWon?: number;
-  hasClaimed: boolean;
-  pointsEarned?: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Match {
-  id: string;
-  team1: string;
-  team2: string;
-  status: "UPCOMING" | "LOCKED" | "COMPLETED";
-  matchType: MatchType;
-  tournament: string;
-  stadium: string;
-  matchTime: string;
-  totalPool: number;
-  totalPredictions: number;
-  finalScore?: {
-    team1Score: number;
-    team1Wickets: number;
-    team2Score: number;
-    team2Wickets: number;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface User {
   walletAddress: string;
@@ -396,8 +359,8 @@ export default function UserProfilePage({
                               <>Hidden</>
                             ) : (
                               <>
-                                {match?.team1}: {prediction.team1Score}/
-                                {prediction.team1Wickets}
+                                {match?.team1}: {prediction.payload?.team1Score}/
+                                {prediction.payload?.team1Wickets}
                               </>
                             )}
                           </span>
@@ -412,8 +375,8 @@ export default function UserProfilePage({
                               <>Hidden</>
                             ) : (
                               <>
-                                {match?.team2}: {prediction.team2Score}/
-                                {prediction.team2Wickets}
+                                {match?.team2}: {prediction.payload?.team2Score}/
+                                {prediction.payload?.team2Wickets}
                               </>
                             )}
                           </span>

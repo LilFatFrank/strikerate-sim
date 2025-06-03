@@ -53,11 +53,14 @@ Nonce: ${nonce}`;
         message = `Create Prediction
 Team1: ${operation?.team1Score}-${operation?.team1Wickets} vs
 Team2: ${operation?.team2Score}-${operation?.team2Wickets}
+Match ID: ${operation?.matchId}
+Market ID: ${operation?.marketId}
 Nonce: ${nonce}`;
         break;
       case "CLAIM_PRIZE":
         message = `Claim Prize
 Match ID: ${operation?.matchId}
+Market ID: ${operation?.marketId}
 Prediction ID: ${operation?.predictionId}
 Amount: ${operation?.amount} USDC
 Nonce: ${nonce}`;

@@ -5,6 +5,7 @@ import { PublicKey } from '@solana/web3.js';
 import * as nacl from 'tweetnacl';
 import bs58 from 'bs58';
 import { updateStats } from '@/lib/stats';
+import { MatchSport, MarketType } from '@/lib/types/enums';
 
 type MatchType = 'T20' | 'ODI';
 
@@ -19,6 +20,7 @@ interface CreateMatchRequest {
   signature: string;
   message: string;
   nonce: number;
+  matchSport: MatchSport;
 }
 
 export async function POST(req: Request) {
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
       walletAddress, 
       signature, 
       message, 
+      matchSport,
       nonce 
     } = await req.json() as CreateMatchRequest;
 
@@ -91,7 +94,7 @@ export async function POST(req: Request) {
     });
 
     // Validate input
-    if (!team1 || !team2 || !matchType || !tournament || !stadium || !matchTime) {
+    if (!team1 || !team2 || !matchType || !tournament || !stadium || !matchTime || !matchSport) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -107,6 +110,7 @@ export async function POST(req: Request) {
       team1,
       team2,
       matchType,
+      matchSport,
       tournament,
       stadium,
       matchTime,
@@ -120,14 +124,41 @@ export async function POST(req: Request) {
     // Update stats
     await updateStats((current) => ({
       matches: {
+        ...current.matches,
         total: current.matches.total + 1,
         upcoming: current.matches.upcoming + 1
       }
     }));
 
+    // Create match
     await matchRef.set(matchData);
 
-    return NextResponse.json(matchData);
+    // Create market using the market API
+    const marketResponse = await fetch(`${req.headers.get('origin')}/api/markets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        matchId: matchRef.id,
+        marketType: MarketType.SCORE,
+        matchSport: MatchSport.CRICKET,
+      })
+    });
+
+    if (!marketResponse.ok) {
+      // If market creation fails, delete the match
+      await matchRef.delete();
+      const error = await marketResponse.json();
+      throw new Error(error.error || 'Failed to create market');
+    }
+
+    const marketData = await marketResponse.json();
+
+    return NextResponse.json({
+      ...matchData,
+      market: marketData
+    });
 
   } catch (error) {
     console.error('Match creation error:', error);

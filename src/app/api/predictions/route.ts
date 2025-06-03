@@ -8,11 +8,13 @@ import { Timestamp } from 'firebase-admin/firestore';
 export async function POST(req: Request) {
   try {
     const { 
-      matchId, 
+      matchId,
+      marketId,
       walletAddress,
       signature,
       message,
-      nonce
+      nonce,
+      amount
     } = await req.json();
 
     // Get match
@@ -26,25 +28,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const match = matchDoc.data();
+    /* const match = matchDoc.data();
     if (match?.status !== 'UPCOMING') {
       return NextResponse.json(
         { error: 'Match is not accepting predictions' },
         { status: 400 }
       );
-    }
+    } */
 
-    // Check if user has already made a prediction
-    const existingPrediction = await adminDb
-      .collection('predictions')
-      .where('matchId', '==', matchId)
-      .where('userId', '==', walletAddress)
-      .get();
-
-    if (!existingPrediction.empty) {
+    const marketRef = adminDb.collection('markets').doc(marketId);
+    const marketDoc = await marketRef.get();
+    if (!marketDoc.exists) {
       return NextResponse.json(
-        { error: 'You have already made a prediction for this match' },
-        { status: 400 }
+        { error: 'Market not found' },
+        { status: 404 }
       );
     }
 
@@ -87,8 +84,9 @@ export async function POST(req: Request) {
     // Return payment details for client to handle
     return NextResponse.json({
       requiresPayment: true,
-      amount: 2,
+      amount: Number(amount),
       recipient: process.env.ADMIN_WALLET_ADDRESS,
+      marketId: marketId,
     });
 
   } catch (error) {
