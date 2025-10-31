@@ -1,5 +1,7 @@
 # strikerate - win with precision
 
+## This is Proof of Concept
+
 strikerate allows you to score predictions like an exam, not just check if they're right. Rewards based on prediction accuracy and not just "yes/no" bets.
 
 Every cricket fan plays some fun bets with their friends. We grew up predicting scores and wickets, selecting players and predicting what will happen on the next ball. At the moment, there are apps that allow you to play fantasy leagues by building teams or selecting match winners but none that allow us to play our own games.
